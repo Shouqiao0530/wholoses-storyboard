@@ -179,36 +179,36 @@ const OLD_STORIES = ['Front-end (retail) traders on Hyperliquid lose the way gam
 
 // exhibits: id, kind, one-line description, current location, proposed location, figure file
 const EX = [
- {id:'fig:alo_mechanics',kind:'fig',zh:'Mechanics of an add-liquidity-only (ALO) order',cur:'5',prop:'5',img:'alo_mechanics'},
- {id:'fig:frontend_orderpanel',kind:'fig',zh:'The venue\'s front-end order-entry panel',cur:'5',prop:'5',img:'frontend_orderpanel'},
+ {id:'fig:alo_mechanics',kind:'fig',zh:'Mechanics of an add-liquidity-only (ALO) order',cur:'5',prop:'A',img:'alo_mechanics'},
+ {id:'fig:frontend_orderpanel',kind:'fig',zh:'The venue\'s front-end order-entry panel',cur:'5',prop:'A',img:'frontend_orderpanel'},
  {id:'fig:label_decision_flow',kind:'fig',zh:'Wallet classification decision flow',cur:'5',prop:'5',img:'classification_decision_flow'},
  {id:'tab:label_cross_coin',kind:'tab',zh:'Per-coin daily active users, volume shares and totals by group',cur:'5',prop:'5'},
  {id:'fig:cost_mechanics',kind:'fig',zh:'Trade P&L, price impact and execution cost on one midprice path',cur:'5',prop:'5',img:'cost_mechanics'},
  {id:'tab:pair_m120',kind:'tab',zh:'Taker-group × maker-group P&L matrix, with pair volumes',cur:'6.1',prop:'A'},
- {id:'fig:cumulative_realized_spread',kind:'fig',zh:'Cumulative M120 by group (all / taker only): the front-end line falls almost monotonically',cur:'6.1',prop:'6.1',img:'cum_m120_excl1010_all'},
- {id:'tab:pnl_split',kind:'tab',zh:'Core decomposition by group: price impact, execution cost, maker, liquidation, ADL, funding, fees, net',cur:'6.1',prop:'6.1'},
+ {id:'fig:cumulative_realized_spread',po:1,kind:'fig',zh:'Cumulative M120 by group (all / taker only): the front-end line falls almost monotonically',cur:'6.1',prop:'6.1',img:'cum_m120_excl1010_all'},
+ {id:'tab:pnl_split',po:2,kind:'tab',zh:'Core decomposition by group: price impact, execution cost, maker, liquidation, ADL, funding, fees, net',cur:'6.1',prop:'6.1'},
  {id:'tab:cum_role_horizon',kind:'tab',zh:'Dollar P&L by horizon and role: the front-end loss widens with the horizon',cur:'6.1',prop:'6.4'},
- {id:'tab:lev_groups',kind:'tab',zh:'Leverage by group (11.4× vs 3.2× vs 1.5×) and the share of each group inside the Q1 range',cur:'6.2',prop:'6.2'},
- {id:'tab:lev_cohorts',kind:'tab',zh:'Front-end cohort profile: volume, opening leverage, lifespan, trade size, equity',cur:'6.2',prop:'6.2'},
- {id:'fig:lev_life_equity',kind:'fig',zh:'Equity net of deposits over a wallet\'s life, by cohort; Panel B relative to first-day equity: every cohort falls, Q4 and Q5 cross −100%',cur:'6.2',prop:'6.2',img:'lev_life_equity'},
- {id:'fig:lev_life_equity_groups',kind:'fig',zh:'The same curves for market makers and algorithmic takers against the front-end median (−9%, −27% vs −94%)',cur:'6.2',prop:'6.2',img:'lev_life_equity_mm_algo'},
- {id:'fig:lev_net_deposits',kind:'fig',zh:'Cumulative net deposits by cohort: Q2 to Q5 deposit, Q1 withdraws (sign under review)',cur:'6.2',prop:'6.2',img:'lev_net_deposits_total'},
+ {id:'tab:lev_groups',po:8,kind:'tab',zh:'Leverage by group (11.4× vs 3.2× vs 1.5×) and the share of each group inside the Q1 range',cur:'6.2',prop:'6.2'},
+ {id:'tab:lev_cohorts',po:9,kind:'tab',zh:'Front-end cohort profile: volume, opening leverage, lifespan, trade size, equity',cur:'6.2',prop:'6.2'},
+ {id:'fig:lev_life_equity',po:3,kind:'fig',zh:'Equity net of deposits over a wallet\'s life, by cohort; Panel B relative to first-day equity: every cohort falls, Q4 and Q5 cross −100%',cur:'6.2',prop:'6.2',img:'lev_life_equity'},
+ {id:'fig:lev_life_equity_groups',po:4,kind:'fig',zh:'The same curves for market makers and algorithmic takers against the front-end median (−9%, −27% vs −94%)',cur:'6.2',prop:'6.2',img:'lev_life_equity_mm_algo'},
+ {id:'fig:lev_net_deposits',po:5,kind:'fig',zh:'Cumulative net deposits by cohort: Q2 to Q5 deposit, Q1 withdraws (sign under review)',cur:'6.2',prop:'6.2',img:'lev_net_deposits_total'},
  {id:'tab:lev_ledger',kind:'tab',zh:'Decomposition by leverage cohort: execution cost flat, price impact and liquidation vary',cur:'6.2',prop:'6.2'},
- {id:'tab:exec_cost_means',kind:'tab',zh:'Half-spread, slippage and execution cost by group: same half-spread, slippage 7.7× higher',cur:'6.3',prop:'6.3'},
+ {id:'tab:exec_cost_means',po:10,kind:'tab',zh:'Half-spread, slippage and execution cost by group: same half-spread, slippage 7.7× higher',cur:'6.3',prop:'6.3'},
  {id:'fig:slippage_size_vs_pdf',kind:'fig',zh:'Slippage rises with order size; front-end volume sits in the large-order tail',cur:'6.3',prop:'6.3',img:'slippage_by_log_size_all10_min300'},
  {id:'tab:taker_slippage_regression',kind:'tab',zh:'Fama–MacBeth slippage on size: two thirds of the front-end premium survives size controls',cur:'6.3',prop:'6.3'},
- {id:'tab:trade_size_depth_elasticity',kind:'tab',zh:'Trade size against opposite-side depth: market makers scale down, front-end traders barely do',cur:'6.3',prop:'6.3'},
- {id:'fig:price_impact_horizon',kind:'fig',zh:'Price impact by horizon (taker / maker): common at 1 minute, apart by 2 hours',cur:'6.4',prop:'6.4',img:'price_impact_horizon_taker'},
- {id:'tab:dir_role_type_bps',kind:'tab',zh:'Price impact by group × horizon × purpose: openings are where the groups disagree, loss-realizing closes decay for all',cur:'6.4',prop:'6.4'},
- {id:'tab:res_flow_return_aggregate',kind:'tab',zh:'Group flow on lagged returns: front-end momentum (+6.8), both algorithmic groups contrarian',cur:'6.4',prop:'6.4'},
- {id:'tab:flow_return_trade_purpose',kind:'tab',zh:'Nine cells: loss-cut flow is momentum for all, gain-realizing flow contrarian for all, openings momentum only for front-end',cur:'6.4',prop:'6.4'},
+ {id:'tab:trade_size_depth_elasticity',kind:'tab',zh:'Trade size against opposite-side depth: market makers scale down, front-end traders barely do',cur:'6.3',prop:'A'},
+ {id:'fig:price_impact_horizon',po:12,kind:'fig',zh:'Price impact by horizon (taker / maker): common at 1 minute, apart by 2 hours',cur:'6.4',prop:'6.4',img:'price_impact_horizon_taker'},
+ {id:'tab:dir_role_type_bps',po:13,kind:'tab',zh:'Price impact by group × horizon × purpose: openings are where the groups disagree, loss-realizing closes decay for all',cur:'6.4',prop:'6.4'},
+ {id:'tab:res_flow_return_aggregate',kind:'tab',zh:'Group flow on lagged returns: front-end momentum (+6.8), both algorithmic groups contrarian',cur:'6.4',prop:'A'},
+ {id:'tab:flow_return_trade_purpose',kind:'tab',zh:'Nine cells: loss-cut flow is momentum for all, gain-realizing flow contrarian for all, openings momentum only for front-end',cur:'6.4',prop:'A'},
  {id:'tab:res_flow_cross_group',kind:'tab',zh:'Cross-group flow regressions: the algorithmic groups trade against the last front-end imbalance',cur:'6.4',prop:'6.4'},
  {id:'tab:flow_flow_trade_purpose',kind:'tab',zh:'Nine-cell flow-to-flow panels: how each cell responds to lagged loss-cut flow',cur:'6.4',prop:'6.4'},
- {id:'tab:liq_descriptives',kind:'tab',zh:'Half-spread, size and crowding by purpose: liquidations 15 bps, $31k, 84% share a millisecond with another taker',cur:'6.5',prop:'6.5'},
+ {id:'tab:liq_descriptives',po:15,kind:'tab',zh:'Half-spread, size and crowding by purpose: liquidations 15 bps, $31k, 84% share a millisecond with another taker',cur:'6.5',prop:'6.5'},
  {id:'tab:liq_conditional',kind:'tab',zh:'Liquidation premium at the same size and minute: only +2 bps',cur:'6.5',prop:'6.5'},
- {id:'tab:liq_timing',kind:'tab',zh:'Post-trade cumulative price impact, voluntary purposes vs liquidations: liquidations −16 → −28 bps',cur:'6.5',prop:'6.5'},
- {id:'tab:lev_liq',kind:'tab',zh:'Liquidations by cohort: incidence rises with leverage, losses run the other way, Q1 −604 bps inside episodes',cur:'6.5',prop:'6.5'},
- {id:'tab:fee_rates',kind:'tab',zh:'Realized fee rates (2.99 vs 0.16 bps) and taker / maker volume shares',cur:'6.6',prop:'6.1'},
+ {id:'tab:liq_timing',po:16,kind:'tab',zh:'Post-trade cumulative price impact, voluntary purposes vs liquidations: liquidations −16 → −28 bps',cur:'6.5',prop:'6.5'},
+ {id:'tab:lev_liq',po:17,kind:'tab',zh:'Liquidations by cohort: incidence rises with leverage, losses run the other way, Q1 −604 bps inside episodes',cur:'6.5',prop:'6.5'},
+ {id:'tab:fee_rates',po:11,kind:'tab',zh:'Realized fee rates (2.99 vs 0.16 bps) and taker / maker volume shares',cur:'6.6',prop:'6.1'},
  {id:'tab:label_rules_firstpass',kind:'tab',zh:'First-pass classification rules',cur:'A',prop:'A'},
  {id:'tab:label_rules_secondpass',kind:'tab',zh:'Second-pass stay rules',cur:'A',prop:'A'},
  {id:'tab:label_stability',kind:'tab',zh:'Label persistence; wallets and active days by group',cur:'A',prop:'A'},
@@ -231,11 +231,11 @@ const EX = [
  {id:'fig:app_lev_cum_mm',kind:'fig',zh:'Cumulative M120 of market-maker cohorts',cur:'A',prop:'A',img:'lev_cum_m120_mm'},
  {id:'fig:app_lev_cum_algo',kind:'fig',zh:'Cumulative M120 of algorithmic-taker cohorts',cur:'A',prop:'A',img:'lev_cum_m120_algo'},
  {id:'fig:lev_cascade_progress',kind:'fig',zh:'When each cohort is liquidated inside a large episode: Q4 and Q5 first, Q1 to Q3 late',cur:'A',prop:'A',img:'lev_cascade_progress'},
- {id:'fig:lev_oct10',kind:'fig',zh:'The October 10 BTC cascade by cohort (moved into 6.5.1 on Sep 30)',cur:'6.5',prop:'A',img:'lev_oct10_cascade'},
+ {id:'fig:lev_oct10',po:14,kind:'fig',zh:'The October 10 BTC cascade by cohort (moved into 6.5.1 on Sep 30)',cur:'6.5',prop:'6.5',img:'lev_oct10_cascade'},
  {id:'tab:funding',kind:'tab',zh:'Funding under two measures: 120-minute attribution vs held to period end',cur:'A',prop:'A'},
  {id:'tab:funding_exposure',kind:'tab',zh:'Opening flow, net position and gross exposure: front-end traders are net long',cur:'A',prop:'A'},
- {id:'NEW:venue_fees_vs_pnl',kind:'fig',zh:'New figure: cumulative fees collected by the venue against cumulative front-end P&L',cur:'N',prop:'6.1',isNew:true},
- {id:'NEW:mm_algo_net_deposits',kind:'fig',zh:'New figure (drawn, T-075 pending): net deposits of market makers and algorithmic takers against front-end wallets',cur:'N',prop:'6.2',isNew:true},
+ {id:'NEW:venue_fees_vs_pnl',po:7,kind:'fig',zh:'New figure: cumulative fees collected by the venue against cumulative front-end P&L',cur:'N',prop:'6.1',isNew:true},
+ {id:'NEW:mm_algo_net_deposits',po:6,kind:'fig',zh:'New figure (drawn, T-075 pending): net deposits of market makers and algorithmic takers against front-end wallets',cur:'N',prop:'6.2',isNew:true},
 ];
 
 const PRESETS = {
@@ -258,7 +258,7 @@ const PRESETS = {
    {key:'5',title:'5 Empirical Methodology',claim:'Unchanged.'},
    {key:'6.1',title:'6.1 Who Loses, and to Whom',claim:'Front-end traders lose $1.11B, market makers gain $0.21B, algorithmic takers break even. Two thirds of the loss, $725M, is the fee the venue posts, 3.4 times the combined profit of every market maker; only $380M is lost to other traders. Fees are settled here and never come back: two margins, taker role and base tier.'},
    {key:'6.2',title:'6.2 Which Wallets Lose',claim:'The median front-end wallet loses 94% of its first-day equity, the median market maker 9%. The loss rises with leverage: the two highest cohorts lose more than they started with and fund themselves again, while the algorithmic groups withdraw. Closes on the bridge table: the $380M split across the three moments of a trade, by group and by cohort. Execution cost is flat across cohorts; timing and liquidation are not.'},
-   {key:'6.3',title:'6.3 Execution: Large Orders into Thin Books',claim:'Same half-spread as everyone else; the gap is slippage. Size explains a third; the rest is orders placed without regard to depth, not crowding. Fees sit here too: taker role and base tier.'},
+   {key:'6.3',title:'6.3 Execution: Large Orders into Thin Books',claim:'Same half-spread as everyone else; the gap is slippage. One sentence each for the size regression and the depth elasticity (tables in the appendix). Fees sit here too: taker role and base tier.'},
    {key:'6.4',title:'6.4 Timing: Momentum Trades Against Contrarian Algorithms',claim:'Common at 1 minute; by 2 hours front-end impact halves while algorithmic impact rises. Openings are where the groups part: front-end flow chases the move, the algorithmic groups take the other side, and the price walks back afterwards.'},
    {key:'6.5',title:'6.5 Forced Exits: Frequent at High Leverage, Ruinous at Low Leverage',claim:'The costliest way to close, 97% front-end outside October 10. Leverage sets how often a wallet is closed out, cascades set how much it costs: high cohorts often and cheaply, Q1 rarely and ruinously, late inside the largest episodes.'},
    {key:'A',title:'Appendix',claim:'Everything already in the appendix stays there, plus the taker-maker pair matrix moved down from 6.1.'},
@@ -267,14 +267,15 @@ const PRESETS = {
   assign:e=>e.prop,
  }
 };
-const STORE='storyboard.wholoses.v5', VSTORE='storyboard.wholoses.versions';
+const STORE='storyboard.wholoses.v6', VSTORE='storyboard.wholoses.versions';
 const exById=Object.fromEntries(EX.map(e=>[e.id,e]));
 
 let state=null, readonly=false, viewState=null;
 function fromPreset(name,story){
   const p=PRESETS[name];
   const order={}; p.columns.forEach(c=>order[c.key]=[]);
-  EX.forEach(e=>{ let k=p.assign(e); if(!order[k]) k=p.columns[p.columns.length-1].key; order[k].push(e.id); });
+  const list=EX.map((e,i)=>[e,i]).sort((a,b)=>(name==='proposal'?((a[0].po||1000+a[1])-(b[0].po||1000+b[1])):(a[1]-b[1]))).map(x=>x[0]);
+  list.forEach(e=>{ let k=p.assign(e); if(!order[k]) k=p.columns[p.columns.length-1].key; order[k].push(e.id); });
   return {preset:name,story:story==null?STORY_DEFAULT:story,columns:p.columns.map(c=>({key:c.key,title:c.title,claim:c.claim,notes:''})),order};
 }
 function save(){ try{ localStorage.setItem(STORE,JSON.stringify(state)); }catch(e){} }
