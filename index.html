@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Who Loses Storyboard</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#EDEFF2; --surface:#FFFFFF; --surface-2:#F6F7F9; --ink:#1B1F27; --muted:#5F6875; --line:#D5DAE1;
+  --accent:#0F6E6E; --accent-ink:#FFFFFF; --accent-soft:#D9EDEC;
+  --tab:#4A5D7A; --tab-soft:#E4E9F1; --fig:#A56A12; --fig-soft:#F6EAD3;
+  --moved:#8A3B2E; --moved-soft:#F5E2DD; --app:#E6E8EC; --shadow:0 1px 2px rgba(20,24,32,.08),0 6px 18px rgba(20,24,32,.08);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14171C; --surface:#1E2229; --surface-2:#252A32; --ink:#E7E9ED; --muted:#9AA3B0; --line:#343A44;
+    --accent:#3FB4B0; --accent-ink:#0F1A1A; --accent-soft:#1E3A3A;
+    --tab:#9DB2D1; --tab-soft:#283243; --fig:#E0A94C; --fig-soft:#3A2E17;
+    --moved:#E58B77; --moved-soft:#3E2620; --app:#1A1D23; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 20px rgba(0,0,0,.35);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14171C; --surface:#1E2229; --surface-2:#252A32; --ink:#E7E9ED; --muted:#9AA3B0; --line:#343A44;
+  --accent:#3FB4B0; --accent-ink:#0F1A1A; --accent-soft:#1E3A3A;
+  --tab:#9DB2D1; --tab-soft:#283243; --fig:#E0A94C; --fig-soft:#3A2E17;
+  --moved:#E58B77; --moved-soft:#3E2620; --app:#1A1D23; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 20px rgba(0,0,0,.35);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans SC","PingFang SC",sans-serif;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:1px solid var(--line);border-radius:6px;padding:6px 10px;cursor:pointer;line-height:1.2}
+button:hover{background:var(--surface-2)}
+button:focus-visible,[contenteditable]:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button.primary:hover{filter:brightness(1.05)}
+button.ghost{border-color:transparent;padding:4px 6px;color:var(--muted)}
+button.ghost:hover{color:var(--ink);background:var(--surface-2)}
+select{font:inherit;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:4px 6px}
+textarea{font:inherit;color:inherit;background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:8px;width:100%;resize:vertical}
+
+/* top bar */
+.top{display:flex;align-items:center;gap:14px;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--line);flex:none;flex-wrap:wrap}
+.top h1{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;font-weight:600;font-size:18px;margin:0;letter-spacing:.01em;text-wrap:balance}
+.top .sub{color:var(--muted);font-size:12.5px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{border:0;border-radius:0;padding:6px 12px}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button.on{background:var(--accent);color:var(--accent-ink)}
+.spacer{flex:1}
+.legend{display:flex;gap:10px;align-items:center;color:var(--muted);font-size:12px}
+.chip{display:inline-block;font-family:"IBM Plex Sans Condensed","IBM Plex Sans",sans-serif;font-weight:600;font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:4px;line-height:1.3}
+.chip.tab{background:var(--tab-soft);color:var(--tab)}
+.chip.fig{background:var(--fig-soft);color:var(--fig)}
+.chip.moved{background:var(--moved-soft);color:var(--moved);text-transform:none;letter-spacing:0}
+.chip.new{background:var(--accent-soft);color:var(--accent);text-transform:none;letter-spacing:0}
+.kbd{font-family:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace}
+
+/* board */
+.board{flex:1;display:flex;gap:12px;padding:14px 16px 18px;overflow-x:auto;overflow-y:hidden;align-items:stretch}
+.col{flex:0 0 300px;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:10px;min-height:0;max-height:100%}
+.col.appendix{background:var(--app)}
+.col.dragover{outline:2px solid var(--accent);outline-offset:-2px}
+.colhead{padding:10px 12px 8px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:4px}
+.colhead .row{display:flex;align-items:center;gap:6px}
+.colkey{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11.5px;color:var(--muted);letter-spacing:.02em}
+.count{margin-left:auto;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.title{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",sans-serif;font-weight:600;font-size:15.5px;line-height:1.25;padding:2px 4px;margin:0 -4px;border-radius:4px;min-height:1.2em}
+.claim{font-size:12.5px;color:var(--muted);line-height:1.4;padding:2px 4px;margin:0 -4px;border-radius:4px;min-height:1.2em}
+[contenteditable]:hover{background:var(--surface-2)}
+[contenteditable]:empty::before{content:attr(data-ph);color:var(--muted);opacity:.7}
+.colhead .tools{display:flex;gap:2px;margin-left:auto}
+.notes{display:none;padding:0 12px 8px}
+.col.shownotes .notes{display:block}
+.notes textarea{min-height:56px;font-size:12.5px}
+.cards{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px;min-height:60px}
+.cards:empty::after{content:"拖到这里";color:var(--muted);font-size:12px;text-align:center;padding:18px 0;border:1px dashed var(--line);border-radius:8px}
+
+/* cards */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 9px 8px;box-shadow:var(--shadow);cursor:grab;display:flex;flex-direction:column;gap:6px;position:relative}
+.col.appendix .card{box-shadow:none}
+.card:active{cursor:grabbing}
+.card.dragging{opacity:.45}
+.card .meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.card .label{font-family:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;font-size:12px;font-weight:500;word-break:break-all}
+.card .zh{font-size:12.5px;line-height:1.4}
+.card .thumb{width:100%;aspect-ratio:16/9;object-fit:cover;object-position:top;border:1px solid var(--line);border-radius:5px;background:#fff;cursor:zoom-in;display:block}
+.card .foot{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted)}
+.card .foot select{font-size:11.5px;padding:2px 4px;margin-left:auto;max-width:130px}
+.card .placeholder{aspect-ratio:16/9;border:1px dashed var(--line);border-radius:5px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px}
+.drop-indicator{height:0;border-top:2px solid var(--accent);margin:-5px 0}
+
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(10,12,16,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:20}
+.modal[hidden]{display:none}
+.dialog{background:var(--surface);color:var(--ink);border-radius:12px;max-width:820px;width:100%;max-height:90vh;display:flex;flex-direction:column;box-shadow:var(--shadow)}
+.dialog header{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.dialog header h2{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",sans-serif;font-size:16px;margin:0;font-weight:600}
+.dialog .body{padding:14px 16px;overflow:auto;display:flex;flex-direction:column;gap:10px}
+.dialog textarea{min-height:320px;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px}
+.lightbox{position:fixed;inset:0;background:rgba(10,12,16,.82);display:flex;align-items:center;justify-content:center;z-index:30;padding:24px;cursor:zoom-out}
+.lightbox[hidden]{display:none}
+.lightbox img{max-width:100%;max-height:100%;background:#fff;border-radius:6px}
+.lightbox .cap{position:absolute;left:0;right:0;bottom:12px;text-align:center;color:#fff;font-size:13px;font-family:"IBM Plex Mono",ui-monospace,monospace}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;z-index:40;opacity:0;transition:opacity .2s}
+.toast.show{opacity:1}
+@media (prefers-reduced-motion: reduce){.toast{transition:none}}
+@media (max-width:700px){.col{flex-basis:260px}.top h1{font-size:16px}}
+</style>
+
+</head>
+<body>
+<div class="top">
+  <div>
+    <h1>Who Loses? Storyboard</h1>
+    <div class="sub">Section 6 的图表怎么排。拖卡片换位置，点标题和论断直接改，改完点导出。</div>
+  </div>
+  <div class="seg" role="group" aria-label="布局">
+    <button id="p-current" title="按现在稿子的位置排">现在的稿子</button>
+    <button id="p-proposal" title="按今天讨论的提议排">提议</button>
+  </div>
+  <button id="add-col">+ 加一节</button>
+  <div class="spacer"></div>
+  <div class="legend"><span class="chip tab">表</span><span class="chip fig">图</span><span class="chip moved">现在 6.1</span><span>= 和现在位置不同</span></div>
+  <button id="import">导入</button>
+  <button id="export" class="primary">导出 Markdown</button>
+</div>
+
+<div class="board" id="board"></div>
+
+<div class="modal" id="modal" hidden>
+  <div class="dialog" role="dialog" aria-labelledby="mtitle">
+    <header><h2 id="mtitle">导出</h2><div class="spacer"></div><button id="copy">复制</button><button id="mclose" class="ghost">关闭</button></header>
+    <div class="body">
+      <div id="mhint" class="sub"></div>
+      <textarea id="mtext" spellcheck="false"></textarea>
+      <div id="mactions" style="display:flex;gap:8px;justify-content:flex-end"></div>
+    </div>
+  </div>
+</div>
+<div class="lightbox" id="lightbox" hidden><img id="lbimg" alt=""><div class="cap" id="lbcap"></div></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="thumbs.js"></script>
+<script>
+(function(){
+'use strict';
+const THUMBS = window.THUMBS || {};
+
+// ---------- exhibits: id, kind, Chinese one-liner, current location, proposed location, figure file ----------
+const EX = [
+ // methodology
+ {id:'fig:alo_mechanics',kind:'fig',zh:'ALO 只加流动性订单机制示意图',cur:'5',prop:'5',img:'alo_mechanics'},
+ {id:'fig:frontend_orderpanel',kind:'fig',zh:'HL 前端下单面板截图',cur:'5',prop:'5',img:'frontend_orderpanel'},
+ {id:'fig:label_decision_flow',kind:'fig',zh:'钱包分类决策流程图',cur:'5',prop:'5',img:'classification_decision_flow'},
+ {id:'tab:label_cross_coin',kind:'tab',zh:'各币三组的日活用户数、成交量占比、总量',cur:'5',prop:'5'},
+ {id:'fig:cost_mechanics',kind:'fig',zh:'单笔交易中间价路径上的 M、T、EC 示意',cur:'5',prop:'5',img:'cost_mechanics'},
+ // 6.1
+ {id:'tab:pair_m120',kind:'tab',zh:'taker 组 × maker 组盈亏矩阵和成交量矩阵',cur:'6.1',prop:'A'},
+ {id:'fig:cumulative_realized_spread',kind:'fig',zh:'三组累计 M120 随时间（全部 / 只看 taker）：散户单调下行',cur:'6.1',prop:'6.1',img:'cum_m120_excl1010_all'},
+ {id:'tab:pnl_split',kind:'tab',zh:'核心分解表：三组 × 价格冲击、执行成本、maker、强平、ADL、资金费、手续费、净额',cur:'6.1',prop:'6.1'},
+ {id:'tab:cum_role_horizon',kind:'tab',zh:'分时间点、分 taker/maker 的美元盈亏：散户亏损随时间变宽',cur:'6.1',prop:'A'},
+ // 6.2
+ {id:'tab:lev_groups',kind:'tab',zh:'三组杠杆分布（散户 11.4× vs 算法 3.2× vs 做市商 1.5×）、落在 Q1 区间的比例',cur:'6.2',prop:'6.2'},
+ {id:'tab:lev_cohorts',kind:'tab',zh:'散户五个杠杆组画像：成交量、杠杆、寿命、单笔规模、权益',cur:'6.2',prop:'6.2'},
+ {id:'fig:lev_life_equity',kind:'fig',zh:'散户一生扣充提后权益，按杠杆组；Panel B 相对首日：五组全部向下，Q4/Q5 穿过 −100%',cur:'6.2',prop:'6.2',img:'lev_life_equity'},
+ {id:'fig:lev_life_equity_groups',kind:'fig',zh:'做市商、算法 taker 的同款一生权益曲线，对比散户中位线（−9%、−27% vs −94%）',cur:'6.2',prop:'6.2',img:'lev_life_equity_mm_algo'},
+ {id:'fig:lev_net_deposits',kind:'fig',zh:'各杠杆组一生累计净充值：Q2–Q5 净充，Q1 净提（符号待核）',cur:'6.2',prop:'6.2',img:'lev_net_deposits_total'},
+ {id:'tab:lev_ledger',kind:'tab',zh:'按杠杆组的盈亏分解：执行成本平、价格冲击和强平随杠杆变',cur:'6.2',prop:'A'},
+ // 6.3
+ {id:'tab:exec_cost_means',kind:'tab',zh:'三组半价差、滑点、执行成本：半价差一样，滑点差 7.7 倍',cur:'6.3',prop:'6.3'},
+ {id:'fig:slippage_size_vs_pdf',kind:'fig',zh:'滑点随订单规模上升；散户成交量在大单尾部',cur:'6.3',prop:'A',img:'slippage_by_log_size_all10_min300'},
+ {id:'tab:taker_slippage_regression',kind:'tab',zh:'滑点对规模的 Fama-MacBeth 回归：控制规模后散户溢价剩三分之二',cur:'6.3',prop:'A'},
+ {id:'tab:trade_size_depth_elasticity',kind:'tab',zh:'订单规模对对侧深度的弹性：做市商缩单，散户不缩',cur:'6.3',prop:'6.3'},
+ // 6.4
+ {id:'fig:price_impact_horizon',kind:'fig',zh:'三组价格冲击随时间点（taker / maker）：1 分钟一样，2 小时分岔',cur:'6.4',prop:'6.4',img:'price_impact_horizon_taker'},
+ {id:'tab:dir_role_type_bps',kind:'tab',zh:'三组 × 时间点 × 交易目的的价格冲击：开仓是分歧点，止损对所有人都差',cur:'6.4',prop:'6.4'},
+ {id:'tab:res_flow_return_aggregate',kind:'tab',zh:'组别订单流对滞后收益：散户顺势 +6.8，算法组逆势',cur:'6.4',prop:'6.4'},
+ {id:'tab:flow_return_trade_purpose',kind:'tab',zh:'九格订单流对滞后收益：止损全顺势、止盈全逆势、开仓只有散户顺势',cur:'6.4',prop:'6.4'},
+ {id:'tab:res_flow_cross_group',kind:'tab',zh:'组别订单流互回归：算法组对着散户失衡下单',cur:'6.4',prop:'A'},
+ {id:'tab:flow_flow_trade_purpose',kind:'tab',zh:'九格互回归两个 panel：与上一张几乎一样',cur:'6.4',prop:'A'},
+ // 6.5
+ {id:'tab:liq_descriptives',kind:'tab',zh:'四种交易目的的半价差、规模、拥挤度：强平 15 bps、3.1 万美元、84% 同毫秒',cur:'6.5',prop:'6.5'},
+ {id:'tab:liq_conditional',kind:'tab',zh:'同规模同分钟下的强平溢价：只有 +2 bps',cur:'6.5',prop:'A'},
+ {id:'tab:liq_timing',kind:'tab',zh:'主动目的 vs 强平的成交后累计价格冲击：强平 −16 → −28 bps',cur:'6.5',prop:'6.5'},
+ {id:'tab:lev_liq',kind:'tab',zh:'按杠杆组的强平：频率随杠杆升，损失反向，潮内 Q1 −604 bps',cur:'6.5',prop:'6.5'},
+ // 6.6
+ {id:'tab:fee_rates',kind:'tab',zh:'三组费率（2.99 vs 0.16 bps）和 taker/maker 成交量占比',cur:'6.6',prop:'6.3'},
+ // appendix
+ {id:'tab:label_rules_firstpass',kind:'tab',zh:'第一遍分类规则表',cur:'A',prop:'A'},
+ {id:'tab:label_rules_secondpass',kind:'tab',zh:'第二遍留存规则表',cur:'A',prop:'A'},
+ {id:'tab:label_stability',kind:'tab',zh:'标签持续性；各组钱包数和活跃天数',cur:'A',prop:'A'},
+ {id:'tab:pair_m120_amb',kind:'tab',zh:'含 Ambiguous 的盈亏矩阵',cur:'A',prop:'A'},
+ {id:'tab:pnl_split_amb',kind:'tab',zh:'含 Ambiguous 的盈亏分解',cur:'A',prop:'A'},
+ {id:'tab:ambiguous_order_behavior',kind:'tab',zh:'Ambiguous vs 前端的订单行为',cur:'A',prop:'A'},
+ {id:'tab:fee_tier_user_vol_share',kind:'tab',zh:'各费率档 × 各组的用户数和成交量占比',cur:'A',prop:'A'},
+ {id:'tab:fee_tier_userday',kind:'tab',zh:'各费率档 × 各组的日均成交量',cur:'A',prop:'A'},
+ {id:'fig:tier_pies',kind:'fig',zh:'费率档构成饼图',cur:'A',prop:'A',img:'tier_pies_by_group'},
+ {id:'tab:depth_elasticity_crowding_controls',kind:'tab',zh:'加拥挤控制的深度弹性：排序不变',cur:'A',prop:'A'},
+ {id:'tab:depth_elasticity_relative_size',kind:'tab',zh:'相对规模回归',cur:'A',prop:'A'},
+ {id:'tab:app_liq_frequency',kind:'tab',zh:'各组强平量、笔数、10 月 10 日份额（97.6% / 79.7% 在这里）',cur:'A',prop:'A'},
+ {id:'tab:app_liq_volume_comparison',kind:'tab',zh:'各目的 × 各组的单笔名义分布',cur:'A',prop:'A'},
+ {id:'tab:app_lev_bounds',kind:'tab',zh:'各币杠杆组边界',cur:'A',prop:'A'},
+ {id:'tab:app_lev_transition',kind:'tab',zh:'日开仓量落在哪个组区间（持续性）',cur:'A',prop:'A'},
+ {id:'tab:app_lev_matched',kind:'tab',zh:'同杠杆下三组比较：散户被强平比例是做市商 20 倍（需重算到十币同窗口）',cur:'A',prop:'6.5'},
+ {id:'tab:app_lev_purpose',kind:'tab',zh:'杠杆组 × 目的 × 时间点的 markout 和价格冲击（含成交前 10 分钟）',cur:'A',prop:'A'},
+ {id:'fig:app_lev_timing_purpose',kind:'fig',zh:'杠杆组分目的的价格冲击路径',cur:'A',prop:'A',img:'lev_timing_purpose_retail'},
+ {id:'fig:app_lev_cum_retail',kind:'fig',zh:'散户各杠杆组累计 M120',cur:'A',prop:'A',img:'lev_cum_m120_retail'},
+ {id:'fig:app_lev_cum_mm',kind:'fig',zh:'做市商各杠杆组累计 M120',cur:'A',prop:'A',img:'lev_cum_m120_mm'},
+ {id:'fig:app_lev_cum_algo',kind:'fig',zh:'算法 taker 各杠杆组累计 M120',cur:'A',prop:'A',img:'lev_cum_m120_algo'},
+ {id:'fig:lev_cascade_progress',kind:'fig',zh:'大强平潮内各杠杆组被强平的先后：Q4/Q5 先，Q1–Q3 后',cur:'A',prop:'6.5',img:'lev_cascade_progress'},
+ {id:'fig:lev_oct10',kind:'fig',zh:'10 月 10 日 BTC 强平潮按杠杆组',cur:'A',prop:'A',img:'lev_oct10_cascade'},
+ {id:'tab:funding',kind:'tab',zh:'两种资金费度量（120 分钟 vs 持有到期末）',cur:'A',prop:'A'},
+ {id:'tab:funding_exposure',kind:'tab',zh:'开仓方向、净头寸、总敞口：散户净多',cur:'A',prop:'A'},
+ // new
+ {id:'NEW:venue_fees_vs_pnl',kind:'fig',zh:'新图：平台累计手续费收入 vs 散户累计盈亏，两条线一上一下',cur:'N',prop:'6.2',isNew:true},
+ {id:'NEW:mm_algo_net_deposits',kind:'fig',zh:'新图（已画，T-075 待拍板）：做市商、算法 taker 一生净充值，对照散户',cur:'N',prop:'6.2',isNew:true},
+];
+
+const PRESETS = {
+ current:{
+  columns:[
+   {key:'5',title:'5 Empirical Methodology',claim:'分类、成本分解、交易目的、杠杆（不动）'},
+   {key:'6.1',title:'6.1 Dollar Profits and Losses by Group',claim:'Front-end traders finance the venue.'},
+   {key:'6.2',title:'6.2 Leverage: Which Front-End Traders Lose, and Why',claim:'相对权益，亏得最惨的是高杠杆小账户；亏光还充钱；输在时机不在执行。'},
+   {key:'6.3',title:'6.3 Execution Cost',claim:'散户 2.43 bps vs 做市商 0.70；半价差一样，差在滑点。'},
+   {key:'6.4',title:'6.4 Post-Trade Price Impact and Flow Dynamics',claim:'1 分钟一样、2 小时分岔；散户顺势，算法逆势。'},
+   {key:'6.5',title:'6.5 Liquidations',claim:'散户承担 80% 强平损失；强平最贵；按杠杆组：Q1 亏最多。'},
+   {key:'6.6',title:'6.6 Fee Tiers',claim:'散户付 87% 的手续费；角色和档位两个边际。'},
+   {key:'A',title:'Appendix',claim:'A.1 分类规则 · A.2 Ambiguous · A.3 费率档 · A.4 拥挤控制 · A.5 强平统计 · A.6 杠杆 · A.7 资金费'},
+   {key:'N',title:'待做 / 新图',claim:'还没有的图'},
+  ],
+  assign:e=>e.cur,
+ },
+ proposal:{
+  columns:[
+   {key:'5',title:'5 Empirical Methodology',claim:'不动。'},
+   {key:'6.1',title:'6.1 Who Loses, and to Whom',claim:'散户亏 11 亿，做市商赚 2 亿，算法打平；11 亿里 7.25 亿是手续费，归交易所。'},
+   {key:'6.2',title:'6.2 Which Wallets Lose',claim:'中位散户钱包亏掉 94% 本金，做市商 9%；杠杆越高亏越多，最高两组亏超本金还在充钱；做市商和算法在提款，平台在收钱。末尾一句：执行成本不随杠杆变，时机和强平随杠杆变。'},
+   {key:'6.3',title:'6.3 At the Fill: Fees and Execution Cost',claim:'成交那一刻付的钱：当 taker、基础费率档、大单进薄簿子。半价差一样，差在滑点和费率档。'},
+   {key:'6.4',title:'6.4 After the Fill: Timing',claim:'1 分钟一样，2 小时后散户掉一半、算法涨。开仓追涨、止损追跌，算法组反向承接。'},
+   {key:'6.5',title:'6.5 At Exit: Forced Exits',claim:'最贵的平仓，10 月 10 日之外 97% 是散户。杠杆定频率，大潮定损失。同杠杆下散户仍被清 20 倍。'},
+   {key:'A',title:'Appendix',claim:'差不多的、支撑性的结果都在这里，正文一句话引用。'},
+   {key:'X',title:'删掉 / 待定',claim:'讨论中没定的放这里。'},
+  ],
+  assign:e=>e.prop,
+ }
+};
+const STORE='storyboard.wholoses.v1';
+const exById=Object.fromEntries(EX.map(e=>[e.id,e]));
+
+let state=null;
+function fromPreset(name){
+  const p=PRESETS[name];
+  const order={}; p.columns.forEach(c=>order[c.key]=[]);
+  EX.forEach(e=>{ let k=p.assign(e); if(!order[k]) k=p.columns[p.columns.length-1].key; order[k].push(e.id); });
+  return {preset:name,columns:p.columns.map(c=>({key:c.key,title:c.title,claim:c.claim,notes:''})),order};
+}
+function save(){ try{ localStorage.setItem(STORE,JSON.stringify(state)); }catch(e){} }
+function load(){ try{ const s=localStorage.getItem(STORE); if(s){ const st=JSON.parse(s); if(st&&st.columns&&st.order) return st; } }catch(e){} return null; }
+
+// ---------- render ----------
+const board=document.getElementById('board');
+function render(){
+  board.innerHTML='';
+  document.getElementById('p-current').classList.toggle('on',state.preset==='current');
+  document.getElementById('p-proposal').classList.toggle('on',state.preset==='proposal');
+  state.columns.forEach((c,ci)=>{
+    const col=document.createElement('section'); col.className='col'+(c.key==='A'?' appendix':'')+(c.notes?' shownotes':''); col.dataset.key=c.key;
+    const head=document.createElement('div'); head.className='colhead';
+    const row1=document.createElement('div'); row1.className='row';
+    const key=document.createElement('span'); key.className='colkey'; key.textContent=c.key==='A'?'appendix':(c.key==='X'?'parking':(c.key==='N'?'todo':'§'+c.key));
+    const count=document.createElement('span'); count.className='count'; count.textContent=(state.order[c.key]||[]).length+' 张';
+    const tools=document.createElement('span'); tools.className='tools';
+    const mk=(t,title,fn)=>{const b=document.createElement('button');b.className='ghost';b.textContent=t;b.title=title;b.addEventListener('click',fn);return b;};
+    tools.appendChild(mk('‹','左移',()=>moveCol(ci,-1)));
+    tools.appendChild(mk('›','右移',()=>moveCol(ci,1)));
+    tools.appendChild(mk('✎','备注',()=>{col.classList.toggle('shownotes'); }));
+    tools.appendChild(mk('✕','删掉这一节（卡片进"删掉 / 待定"）',()=>delCol(ci)));
+    row1.append(key,count,tools);
+    const title=document.createElement('div'); title.className='title'; title.contentEditable='true'; title.dataset.ph='节标题'; title.textContent=c.title;
+    title.addEventListener('blur',()=>{c.title=title.textContent.trim();save();});
+    const claim=document.createElement('div'); claim.className='claim'; claim.contentEditable='true'; claim.dataset.ph='这一节的一句话论断'; claim.textContent=c.claim;
+    claim.addEventListener('blur',()=>{c.claim=claim.textContent.trim();save();});
+    head.append(row1,title,claim);
+    const notes=document.createElement('div'); notes.className='notes';
+    const ta=document.createElement('textarea'); ta.placeholder='备注：怎么写、留什么、待定什么'; ta.value=c.notes||'';
+    ta.addEventListener('input',()=>{c.notes=ta.value;save();});
+    notes.appendChild(ta);
+    const cards=document.createElement('div'); cards.className='cards'; cards.dataset.key=c.key;
+    (state.order[c.key]||[]).forEach(id=>{ const e=exById[id]; if(e) cards.appendChild(renderCard(e,c.key)); });
+    wireDrop(cards,col);
+    col.append(head,notes,cards);
+    board.appendChild(col);
+  });
+}
+function renderCard(e,colKey){
+  const d=document.createElement('article'); d.className='card'; d.draggable=true; d.dataset.id=e.id;
+  const meta=document.createElement('div'); meta.className='meta';
+  const chip=document.createElement('span'); chip.className='chip '+e.kind; chip.textContent=e.kind==='tab'?'表':'图';
+  const lab=document.createElement('span'); lab.className='label'; lab.textContent=e.id;
+  meta.append(chip,lab);
+  if(e.isNew){ const n=document.createElement('span'); n.className='chip new'; n.textContent='新'; meta.appendChild(n); }
+  else if(e.cur!==colKey){ const m=document.createElement('span'); m.className='chip moved'; m.textContent='现在 '+(e.cur==='A'?'附录':e.cur); meta.appendChild(m); }
+  const zh=document.createElement('div'); zh.className='zh'; zh.textContent=e.zh;
+  d.append(meta,zh);
+  if(e.kind==='fig'){
+    const t=e.img&&THUMBS[e.img];
+    if(t){ const img=document.createElement('img'); img.className='thumb'; img.src=t.s; img.alt=e.id; img.loading='lazy';
+      img.addEventListener('click',ev=>{ev.stopPropagation();openLightbox(t.l,e.id);}); d.appendChild(img); }
+    else { const ph=document.createElement('div'); ph.className='placeholder'; ph.textContent=e.isNew?'还没画':'无缩略图'; d.appendChild(ph); }
+  }
+  const foot=document.createElement('div'); foot.className='foot';
+  const sel=document.createElement('select'); sel.title='移到…';
+  const o0=document.createElement('option'); o0.textContent='移到…'; o0.value=''; sel.appendChild(o0);
+  state.columns.forEach(c=>{ if(c.key!==colKey){ const o=document.createElement('option'); o.value=c.key; o.textContent=c.key==='A'?'附录':(c.key==='X'?'删掉/待定':c.key+' '+c.title.replace(/^\S+\s/,'').slice(0,18)); sel.appendChild(o);} });
+  sel.addEventListener('change',()=>{ if(sel.value){ moveCard(e.id,sel.value,null); } });
+  foot.appendChild(sel);
+  d.appendChild(foot);
+  d.addEventListener('dragstart',ev=>{ ev.dataTransfer.setData('text/plain',e.id); ev.dataTransfer.effectAllowed='move'; d.classList.add('dragging'); });
+  d.addEventListener('dragend',()=>{ d.classList.remove('dragging'); clearIndicators(); });
+  return d;
+}
+function clearIndicators(){ document.querySelectorAll('.drop-indicator').forEach(n=>n.remove()); document.querySelectorAll('.col.dragover').forEach(n=>n.classList.remove('dragover')); }
+function wireDrop(cards,col){
+  cards.addEventListener('dragover',ev=>{ ev.preventDefault(); ev.dataTransfer.dropEffect='move'; col.classList.add('dragover');
+    clearIndicators(); col.classList.add('dragover');
+    const after=cardAfterPointer(cards,ev.clientY); const ind=document.createElement('div'); ind.className='drop-indicator';
+    if(after) cards.insertBefore(ind,after); else cards.appendChild(ind); });
+  cards.addEventListener('dragleave',ev=>{ if(!col.contains(ev.relatedTarget)) clearIndicators(); });
+  cards.addEventListener('drop',ev=>{ ev.preventDefault(); const id=ev.dataTransfer.getData('text/plain'); const after=cardAfterPointer(cards,ev.clientY); clearIndicators();
+    moveCard(id,cards.dataset.key,after?after.dataset.id:null); });
+}
+function cardAfterPointer(cards,y){
+  const els=[...cards.querySelectorAll('.card:not(.dragging)')];
+  for(const el of els){ const r=el.getBoundingClientRect(); if(y<r.top+r.height/2) return el; }
+  return null;
+}
+function moveCard(id,toKey,beforeId){
+  for(const k in state.order){ const i=state.order[k].indexOf(id); if(i>=0) state.order[k].splice(i,1); }
+  const arr=state.order[toKey]||(state.order[toKey]=[]);
+  const j=beforeId?arr.indexOf(beforeId):-1;
+  if(j>=0) arr.splice(j,0,id); else arr.push(id);
+  save(); render();
+}
+function moveCol(i,dir){ const j=i+dir; if(j<0||j>=state.columns.length) return; const t=state.columns[i]; state.columns[i]=state.columns[j]; state.columns[j]=t; save(); render(); }
+function delCol(i){ const c=state.columns[i]; if(state.columns.length<=2) return; if(!confirm('删掉「'+c.title+'」？它的卡片会移到"删掉 / 待定"。')) return;
+  let park=state.columns.find(x=>x.key==='X'); if(!park){ park={key:'X',title:'删掉 / 待定',claim:'',notes:''}; state.columns.push(park); state.order.X=[]; }
+  state.order.X=(state.order.X||[]).concat(state.order[c.key]||[]); delete state.order[c.key]; state.columns.splice(i,1); save(); render(); }
+function addCol(){ let n=1; while(state.columns.some(c=>c.key==='新'+n)) n++; const key='新'+n; state.columns.splice(Math.max(1,state.columns.length-2),0,{key,title:'新的一节',claim:'',notes:''}); state.order[key]=[]; save(); render(); }
+
+// ---------- export / import ----------
+function toMarkdown(){
+  const lines=['# Who Loses? Section 6 storyboard','',`布局起点：${state.preset==='current'?'现在的稿子':'提议'}；导出时间 ${new Date().toISOString().slice(0,16).replace('T',' ')}`,''];
+  state.columns.forEach(c=>{
+    const ids=state.order[c.key]||[];
+    lines.push(`## ${c.title}`);
+    if(c.claim) lines.push(`论断：${c.claim}`);
+    if(c.notes) lines.push(`备注：${c.notes.replace(/\n/g,' ')}`);
+    lines.push(`图表 ${ids.length} 张：`);
+    ids.forEach(id=>{ const e=exById[id]; if(!e) return; const moved=e.isNew?'（新）':(e.cur!==c.key?`（现在 ${e.cur==='A'?'附录':e.cur}）`:''); lines.push(`- [${e.kind==='tab'?'表':'图'}] ${e.id} ${moved} ${e.zh}`); });
+    lines.push('');
+  });
+  return lines.join('\n');
+}
+const modal=document.getElementById('modal'), mtext=document.getElementById('mtext'), mtitle=document.getElementById('mtitle'), mhint=document.getElementById('mhint'), mactions=document.getElementById('mactions');
+function openExport(){ mtitle.textContent='导出'; mhint.textContent='Markdown 给人看；最后一行是 JSON，粘回"导入"可以恢复这块板。'; mtext.value=toMarkdown()+'\n<!-- state -->\n'+JSON.stringify(state); mactions.innerHTML=''; modal.hidden=false; mtext.focus(); mtext.select(); }
+function openImport(){ mtitle.textContent='导入'; mhint.textContent='把导出里最后一行的 JSON 粘到这里。'; mtext.value=''; mactions.innerHTML='';
+  const b=document.createElement('button'); b.className='primary'; b.textContent='恢复'; b.addEventListener('click',()=>{ try{ const txt=mtext.value; const j=txt.slice(txt.indexOf('{')); const st=JSON.parse(j); if(!st.columns||!st.order) throw 0; state=st; save(); render(); modal.hidden=true; toast('已恢复'); }catch(e){ toast('不是有效的 JSON'); } });
+  mactions.appendChild(b); modal.hidden=false; mtext.focus(); }
+document.getElementById('export').addEventListener('click',openExport);
+document.getElementById('import').addEventListener('click',openImport);
+document.getElementById('mclose').addEventListener('click',()=>modal.hidden=true);
+modal.addEventListener('click',ev=>{ if(ev.target===modal) modal.hidden=true; });
+document.getElementById('copy').addEventListener('click',async()=>{ try{ await navigator.clipboard.writeText(mtext.value); toast('已复制'); }catch(e){ mtext.select(); toast('请按 Ctrl/Cmd+C 复制'); } });
+document.getElementById('add-col').addEventListener('click',addCol);
+document.getElementById('p-current').addEventListener('click',()=>switchPreset('current'));
+document.getElementById('p-proposal').addEventListener('click',()=>switchPreset('proposal'));
+function switchPreset(name){ if(state.preset===name && !confirm('重新按「'+(name==='current'?'现在的稿子':'提议')+'」排列，丢掉这块板上的改动？')) return; if(state.preset!==name && !confirm('切换布局会丢掉这块板上的改动，先导出了吗？')) return; state=fromPreset(name); save(); render(); }
+
+// lightbox
+const lb=document.getElementById('lightbox'), lbimg=document.getElementById('lbimg'), lbcap=document.getElementById('lbcap');
+function openLightbox(src,cap){ lbimg.src=src; lbimg.alt=cap; lbcap.textContent=cap; lb.hidden=false; }
+lb.addEventListener('click',()=>{ lb.hidden=true; lbimg.src=''; });
+document.addEventListener('keydown',ev=>{ if(ev.key==='Escape'){ lb.hidden=true; modal.hidden=true; } });
+let toastTimer=null; function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),1600); }
+
+state=load()||fromPreset('proposal');
+render();
+})();
+</script>
+</body>
+</html>
