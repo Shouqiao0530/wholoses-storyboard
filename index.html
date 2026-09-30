@@ -135,7 +135,7 @@ body.readonly .card .foot{display:none}
   <div class="bar">
     <div class="seg" role="group" aria-label="Start from">
       <button id="p-proposal" title="Rearrange the board as the Sep 30 proposal">Start from proposal</button>
-      <button id="p-current" title="Rearrange the board as the current draft (commit bcea9b2)">Start from current draft</button>
+      <button id="p-current" title="Rearrange the board as the current draft (Overleaf a52bd58, Sep 30 08:58 PDT)">Start from current draft</button>
     </div>
     <button id="view-current" title="Look at the current draft without touching the board">View current draft</button>
     <button id="add-col">+ Add section</button>
@@ -228,7 +228,7 @@ const EX = [
  {id:'fig:app_lev_cum_mm',kind:'fig',zh:'Cumulative M120 of market-maker cohorts',cur:'A',prop:'A',img:'lev_cum_m120_mm'},
  {id:'fig:app_lev_cum_algo',kind:'fig',zh:'Cumulative M120 of algorithmic-taker cohorts',cur:'A',prop:'A',img:'lev_cum_m120_algo'},
  {id:'fig:lev_cascade_progress',kind:'fig',zh:'When each cohort is liquidated inside a large episode: Q4 and Q5 first, Q1 to Q3 late',cur:'A',prop:'A',img:'lev_cascade_progress'},
- {id:'fig:lev_oct10',kind:'fig',zh:'The October 10 BTC cascade by cohort',cur:'A',prop:'A',img:'lev_oct10_cascade'},
+ {id:'fig:lev_oct10',kind:'fig',zh:'The October 10 BTC cascade by cohort (moved into 6.5.1 on Sep 30)',cur:'6.5',prop:'A',img:'lev_oct10_cascade'},
  {id:'tab:funding',kind:'tab',zh:'Funding under two measures: 120-minute attribution vs held to period end',cur:'A',prop:'A'},
  {id:'tab:funding_exposure',kind:'tab',zh:'Opening flow, net position and gross exposure: front-end traders are net long',cur:'A',prop:'A'},
  {id:'NEW:venue_fees_vs_pnl',kind:'fig',zh:'New figure: cumulative fees collected by the venue against cumulative front-end P&L',cur:'N',prop:'6.1',isNew:true},
@@ -264,7 +264,7 @@ const PRESETS = {
   assign:e=>e.prop,
  }
 };
-const STORE='storyboard.wholoses.v4', VSTORE='storyboard.wholoses.versions';
+const STORE='storyboard.wholoses.v5', VSTORE='storyboard.wholoses.versions';
 const exById=Object.fromEntries(EX.map(e=>[e.id,e]));
 
 let state=null, readonly=false, viewState=null;
