@@ -63,6 +63,8 @@ textarea{font:inherit;color:inherit;background:var(--surface-2);border:1px solid
 .banner{display:none;align-items:center;gap:10px;background:var(--moved-soft);color:var(--moved);border-radius:6px;padding:6px 12px;font-size:13px}
 body.readonly .banner{display:flex}
 body.readonly .story .txt{pointer-events:none}
+body.readonly #reset-story{display:none}
+.story button{align-self:flex-start;white-space:nowrap}
 
 .board{flex:1;display:flex;gap:14px;padding:14px 16px 18px;overflow-x:auto;overflow-y:hidden;align-items:stretch}
 .col{flex:0 0 400px;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:10px;min-height:0;max-height:100%}
@@ -131,7 +133,7 @@ body.readonly .card .foot{display:none}
     <div class="spacer"></div>
     <div class="legend"><span class="chip tab">Table</span><span class="chip fig">Figure</span><span class="chip moved">now 6.1</span><span>= sits elsewhere in the current draft</span></div>
   </div>
-  <div class="story"><span class="lab">Main story</span><div class="txt" id="story" contenteditable="true" data-ph="What the paper says, in a few sentences"></div></div>
+  <div class="story"><span class="lab">Main story</span><div class="txt" id="story" contenteditable="true" data-ph="What the paper says, in a few sentences"></div><button id="reset-story" class="ghost" title="Put back the six-point story">Reset story</button></div>
   <div class="bar">
     <div class="seg" role="group" aria-label="Start from">
       <button id="p-proposal" title="Rearrange the board as the Sep 30 proposal">Start from proposal</button>
@@ -423,6 +425,7 @@ document.getElementById('p-current').addEventListener('click',()=>switchPreset('
 document.getElementById('p-proposal').addEventListener('click',()=>switchPreset('proposal'));
 document.getElementById('view-current').addEventListener('click',()=>{ viewState=fromPreset('current',state.story); readonly=true; document.querySelector('.banner span').textContent='Viewing the current draft, read-only. Your board is untouched.'; render(); });
 document.getElementById('back').addEventListener('click',()=>{ readonly=false; viewState=null; render(); });
+document.getElementById('reset-story').addEventListener('click',()=>{ if(readonly) return; if(!confirm('Replace the story text with the six-point version?')) return; state.story=STORY_DEFAULT; save(); render(); toast('Story reset'); });
 function switchPreset(name){ if(readonly){ readonly=false; viewState=null; } const label=name==='current'?'current draft':'proposal'; if(!confirm('Rearrange the board as the '+label+'? Unsaved changes on the board are lost (saved versions stay).')) return; state=fromPreset(name,state.story); save(); render(); }
 
 const lb=document.getElementById('lightbox'), lbimg=document.getElementById('lbimg'), lbcap=document.getElementById('lbcap');
