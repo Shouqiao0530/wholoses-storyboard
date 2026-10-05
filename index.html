@@ -83,11 +83,19 @@ body.readonly .tools{display:none}
 .notes{display:none;padding:0 12px 8px}
 .col.shownotes .notes{display:block}
 .notes textarea{min-height:56px;max-height:300px;font-size:12.5px;overflow:auto}
-.cards{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:9px;min-height:60px}
+.colbody{flex:1;overflow-y:auto;min-height:0;display:flex;flex-direction:column}
+.zone-lab{display:flex;align-items:center;gap:8px;padding:8px 12px 0;font-family:"IBM Plex Sans Condensed","IBM Plex Sans",sans-serif;font-weight:600;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.zone-lab::after{content:"";flex:1;border-top:1px dashed var(--line)}
+.zone-lab.app{color:var(--accent)}
+.cards{flex:none;padding:10px;display:flex;flex-direction:column;gap:9px;min-height:48px}
+.cards.app{background:var(--app);flex:1;border-radius:0 0 10px 10px}
+.card.inapp{box-shadow:none;border-style:dashed}
+.card .why{font-size:11.5px;color:var(--muted);line-height:1.35;padding:2px 6px;margin:0 -4px;border-radius:4px;border-left:2px solid var(--accent)}
+body.hideapp .zone-lab.app,body.hideapp .cards.app{display:none}
+.chip.gone{background:var(--moved-soft);color:var(--moved);text-transform:none;letter-spacing:0}
 .cards:empty::after{content:"Drop here";color:var(--muted);font-size:12px;text-align:center;padding:18px 0;border:1px dashed var(--line);border-radius:8px}
 
 .card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:9px 10px;box-shadow:var(--shadow);cursor:grab;display:flex;flex-direction:column;gap:6px;position:relative}
-.col.appendix .card{box-shadow:none}
 .card:active{cursor:grabbing}
 body.readonly .card{cursor:default}
 .card.dragging{opacity:.45}
@@ -129,17 +137,18 @@ body.readonly .card .foot{display:none}
 <div class="top">
   <div class="bar">
     <h1>Who Loses? Storyboard</h1>
-    <span class="sub">Drag exhibits between sections, click a title or claim to edit it. Save a version when the board looks right.</span>
+    <span class="sub">Each section column shows what the section prints, then what it sends to the appendix. Drag cards between zones or sections; click a title, claim or reason to edit it.</span>
     <div class="spacer"></div>
-    <div class="legend"><span class="chip tab">Table</span><span class="chip fig">Figure</span><span class="chip moved">now 6.1</span><span>= sits elsewhere in the current draft</span></div>
+    <div class="legend"><span class="chip tab">Table</span><span class="chip fig">Figure</span><span class="chip moved">now 6.1 app.</span><span>= where it sits in the Oct 4 draft</span><span class="chip gone">removed Oct 4</span><span class="chip new">new</span></div>
   </div>
-  <div class="story"><span class="lab">Main story</span><div class="txt" id="story" contenteditable="true" data-ph="What the paper says, in a few sentences"></div><button id="reset-story" class="ghost" title="Put back the six-point story">Reset story</button></div>
+  <div class="story"><span class="lab">Main story</span><div class="txt" id="story" contenteditable="true" data-ph="What the paper says, in a few sentences"></div><button id="reset-story" class="ghost" title="Put back the seven-point story">Reset story</button></div>
   <div class="bar">
     <div class="seg" role="group" aria-label="Start from">
-      <button id="p-proposal" title="Rearrange the board as the Sep 30 proposal">Start from proposal</button>
-      <button id="p-current" title="Rearrange the board as the current draft (Overleaf a52bd58, Sep 30 08:58 PDT)">Start from current draft</button>
+      <button id="p-proposal" title="Rearrange the board as the proposal (Notion outline, Oct 4 numbers)">Start from proposal</button>
+      <button id="p-current" title="Rearrange the board as the current draft (Overleaf 4a7ec68, Oct 4 17:48 PDT)">Start from current draft</button>
     </div>
-    <button id="view-current" title="Look at the current draft without touching the board">View current draft</button>
+    <button id="view-current" title="Look at the current draft (Overleaf 4a7ec68, Oct 4) without touching the board">View current draft</button>
+    <button id="toggle-app" title="Collapse the appendix zones to see the main text alone">Hide appendix zones</button>
     <button id="add-col">+ Add section</button>
     <div class="spacer"></div>
     <button id="save-version" class="primary">Save version</button>
@@ -174,120 +183,125 @@ body.readonly .card .foot{display:none}
 const THUMBS = window.THUMBS || {};
 const TABS = window.TABS || {};
 
-const STORY_DEFAULT = '1. Who loses, and to whom. Retail loses $1.11B in 15 months on Hyperliquid; market makers gain $0.21B, algorithmic takers break even. Most of the loss goes to the venue, not to the traders on the other side.\n2. Which retail traders. Retail runs 8× the leverage of market makers. Every leverage cohort\'s equity falls; the smallest, highest-leverage accounts lose more than they started with and deposit again, while market makers and algorithmic takers withdraw.\n3. Three channels. Fees 65%, voluntary trading 14%, forced exits 20%. Across leverage cohorts execution cost is flat; timing and liquidation losses rise with leverage.\n4. Fees. $725M, 87% of all fees paid, collected by the venue. Retail pays 2.99 bps per dollar against 0.16: it takes liquidity and sits in the base tier. The schedule favors professionals, the opposite of equity markets where retail flow earns price improvement.\n5. Voluntary trading. Execution: same half-spread, 8× the slippage, because retail sends large orders into thin books. Timing: retail buys after rises and sells after falls; algorithms take the other side and the price reverses.\n6. Forced exits. Liquidations are the costliest closes and 97% of them are retail. Leverage sets how often, cascades set how much: the highest-leverage cohort is liquidated after a 1.7% move, the lowest loses the most because its liquidations sit late in the worst cascades. Gambler\'s ruin: small stake, full leverage, re-funded after each wipe-out.';
-const OLD_STORIES = ['Front-end (retail) traders on Hyperliquid lose the way gamblers do. Every wallet faces the same order book, the same fee schedule and the same margin engine, yet retail loses $1.11 billion in 15 months, and most of it goes to the venue rather than to the traders on the other side: the venue collects $725 million in fees from retail, more than three times what algorithmic market makers earn. Every leverage cohort\'s equity falls over its life; the smallest, highest-leverage accounts lose everything they started with and deposit again, while market makers and algorithmic takers withdraw. The loss comes from how retail trades, through three channels: fees (65%), forced exits (20%) and voluntary trading (14%). In execution, retail sends large orders when the book is thin, so it pays the same half-spread as everyone else but far more slippage, and not because it is more crowded. In timing, retail opens and cuts losses in the direction the price has just moved, the algorithmic groups take the other side, and the price then reverses; the higher the leverage, the sharper the reversal. In forced exits, liquidations are the costliest way to close and almost all of them are retail; leverage sets how often a wallet is liquidated and cascades set how much each liquidation costs, so the lowest-leverage cohort, liquidated rarely but late in the worst cascades, loses the most on its liquidations. At matched leverage retail is still liquidated 20 times as often as market makers, so this is not only about leverage. Regulators are reaching for leverage caps; the evidence points to cascades and to the venue\'s fee take.','1. Retail loses $1.11B in 15 months on Hyperliquid. Market makers gain $0.21B; the venue collects $725M in fees, more than three times that.\n2. The median retail wallet loses 94% of its starting equity. The smallest, highest-leverage accounts lose it all and deposit again; market makers and algorithmic takers withdraw.\n3. The loss runs through three channels: fees (65%), forced exits (20%), voluntary trading (14%).\n4. Execution: retail pays the same half-spread but 8× the slippage, because it sends large orders into thin books.\n5. Timing: retail buys after rises and sells after falls; algorithms take the other side, and the price reverses.\n6. Forced exits: liquidations are the costliest closes and 97% of them are retail. Leverage sets how often; cascades set how much, so the lowest-leverage cohort loses the most. At matched leverage retail is still liquidated 20× as often.'];
+const STORY_DEFAULT = "1. Who loses, and to whom. Perpetual trading is zero-sum among traders, less the venue's fees; who loses is visible only after traders are classified. Retail loses $1.11 billion in 15 months: $725 million (65%) goes to the venue as fees, $380 million (35%) to other traders, mostly market makers. Market makers net $0.21 billion; algorithmic takers net nothing.\n2. Which retail traders. Retail opens at 9.0× leverage against 1.4× for market makers, and within retail the losers are the small accounts at the highest leverage. Sorted into five leverage cohorts, every cohort's equity falls; the highest cohort loses more than it started with and deposits again, while market makers and algorithmic takers withdraw. They trade like gamblers: small stakes, high leverage, re-funded after each loss.\n3. How they lose: three channels. We decompose the retail loss into fees (65%), voluntary trading (14%: execution cost at the fill and price impact after it) and forced exits (20%). By leverage cohort the cost paid at the fill is the same everywhere; what changes with leverage is what happens after the fill: price impact fades as leverage rises, and liquidations hit the high-leverage cohorts most often but cost the low-leverage cohort the most.\n4. Fees. The largest channel: $725 million, collected by the venue, 3.4 times the market makers' profit. Retail pays 2.99 bps per dollar against 0.16 for market makers: it takes liquidity and stays in the base tier, while market makers, who earn fractions of a basis point per trade, stake and trade their way into the rebate tiers. The outcome is the opposite of equity markets, where retail flow earns price improvement.\n5. Execution cost. Retail pays the same half-spread as everyone else but 8 times the slippage: it sends large orders into thin books. This cost is the same at every leverage.\n6. Price impact. After the fill retail's trades go wrong: it buys after rises and sells after falls, the algorithmic groups take the other side, and the price reverses. The higher the leverage, the sharper the reversal.\n7. Forced exits. Liquidation is the costliest way to close, and 97% of it is retail. Leverage sets how often a wallet is liquidated: the highest-leverage cohort after a 1.9% move. Cascades set how much it costs: the lowest-leverage cohort, liquidated rarely but late in the worst cascades, loses the most. Gambler's ruin, enforced by the margin engine: a small move ends the game, and the account is re-funded for the next one.\nConclusion: a leverage cap binds on the smallest accounts; the big losses sit in cascades; the biggest channel is the fee schedule.";
+const OLD_STORIES = ['Front-end (retail) traders on Hyperliquid lose the way gamblers do. Every wallet faces the same order book, the same fee schedule and the same margin engine, yet retail loses $1.11 billion in 15 months, and most of it goes to the venue rather than to the traders on the other side: the venue collects $725 million in fees from retail, more than three times what algorithmic market makers earn. Every leverage cohort\'s equity falls over its life; the smallest, highest-leverage accounts lose everything they started with and deposit again, while market makers and algorithmic takers withdraw. The loss comes from how retail trades, through three channels: fees (65%), forced exits (20%) and voluntary trading (14%). In execution, retail sends large orders when the book is thin, so it pays the same half-spread as everyone else but far more slippage, and not because it is more crowded. In timing, retail opens and cuts losses in the direction the price has just moved, the algorithmic groups take the other side, and the price then reverses; the higher the leverage, the sharper the reversal. In forced exits, liquidations are the costliest way to close and almost all of them are retail; leverage sets how often a wallet is liquidated and cascades set how much each liquidation costs, so the lowest-leverage cohort, liquidated rarely but late in the worst cascades, loses the most on its liquidations. At matched leverage retail is still liquidated 20 times as often as market makers, so this is not only about leverage. Regulators are reaching for leverage caps; the evidence points to cascades and to the venue\'s fee take.','1. Retail loses $1.11B in 15 months on Hyperliquid. Market makers gain $0.21B; the venue collects $725M in fees, more than three times that.\n2. The median retail wallet loses 94% of its starting equity. The smallest, highest-leverage accounts lose it all and deposit again; market makers and algorithmic takers withdraw.\n3. The loss runs through three channels: fees (65%), forced exits (20%), voluntary trading (14%).\n4. Execution: retail pays the same half-spread but 8× the slippage, because it sends large orders into thin books.\n5. Timing: retail buys after rises and sells after falls; algorithms take the other side, and the price reverses.\n6. Forced exits: liquidations are the costliest closes and 97% of them are retail. Leverage sets how often; cascades set how much, so the lowest-leverage cohort loses the most. At matched leverage retail is still liquidated 20× as often.', '1. Who loses, and to whom. Retail loses $1.11B in 15 months on Hyperliquid; market makers gain $0.21B, algorithmic takers break even. Most of the loss goes to the venue, not to the traders on the other side.\n2. Which retail traders. Retail runs 8× the leverage of market makers. Every leverage cohort\'s equity falls; the smallest, highest-leverage accounts lose more than they started with and deposit again, while market makers and algorithmic takers withdraw.\n3. Three channels. Fees 65%, voluntary trading 14%, forced exits 20%. Across leverage cohorts execution cost is flat; timing and liquidation losses rise with leverage.\n4. Fees. $725M, 87% of all fees paid, collected by the venue. Retail pays 2.99 bps per dollar against 0.16: it takes liquidity and sits in the base tier. The schedule favors professionals, the opposite of equity markets where retail flow earns price improvement.\n5. Voluntary trading. Execution: same half-spread, 8× the slippage, because retail sends large orders into thin books. Timing: retail buys after rises and sells after falls; algorithms take the other side and the price reverses.\n6. Forced exits. Liquidations are the costliest closes and 97% of them are retail. Leverage sets how often, cascades set how much: the highest-leverage cohort is liquidated after a 1.7% move, the lowest loses the most because its liquidations sit late in the worst cascades. Gambler\'s ruin: small stake, full leverage, re-funded after each wipe-out.'];
 
-// exhibits: id, kind, one-line description, current location, proposed location, figure file
+// exhibits: id, kind, one-line description, current location (cur, capp = in the appendix) in Overleaf 4a7ec68 (Oct 4),
+// proposed location (prop, papp = in the appendix of that section), why = reason for the appendix, figure file
 const EX = [
- {id:'fig:alo_mechanics',kind:'fig',zh:'Mechanics of an add-liquidity-only (ALO) order',cur:'5',prop:'A',img:'alo_mechanics'},
- {id:'fig:frontend_orderpanel',kind:'fig',zh:'The venue\'s front-end order-entry panel',cur:'5',prop:'A',img:'frontend_orderpanel'},
- {id:'fig:label_decision_flow',po:1,kind:'fig',zh:'Wallet classification decision flow',cur:'5',prop:'5',img:'classification_decision_flow'},
- {id:'tab:label_cross_coin',po:2,kind:'tab',zh:'Per-coin daily active users, volume shares and totals by group',cur:'5',prop:'5'},
- {id:'fig:cost_mechanics',po:3,kind:'fig',zh:'Trade P&L, price impact and execution cost on one midprice path',cur:'5',prop:'5',img:'cost_mechanics'},
- {id:'tab:pair_m120',po:5,kind:'tab',zh:'Taker-group × maker-group P&L matrix, with pair volumes',cur:'6.1',prop:'6.1'},
- {id:'fig:cumulative_realized_spread',po:4,kind:'fig',zh:'Cumulative M120 by group (all / taker only): the front-end line falls almost monotonically',cur:'6.1',prop:'6.1',img:'cum_m120_excl1010_all'},
- {id:'tab:pnl_split',po:11,kind:'tab',zh:'Core decomposition by group: price impact, execution cost, maker, liquidation, ADL, funding, fees, net',cur:'6.1',prop:'6.3'},
- {id:'tab:cum_role_horizon',kind:'tab',zh:'Dollar P&L by horizon and role: the front-end loss widens with the horizon',cur:'6.1',prop:'A'},
- {id:'tab:lev_groups',po:6,kind:'tab',zh:'Leverage by group (11.4× vs 3.2× vs 1.5×) and the share of each group inside the Q1 range',cur:'6.2',prop:'6.2'},
- {id:'tab:lev_cohorts',po:9,kind:'tab',zh:'Front-end cohort profile: volume, opening leverage, lifespan, trade size, equity',cur:'6.2',prop:'6.2'},
- {id:'fig:lev_life_equity',po:7,kind:'fig',zh:'Equity net of deposits over a wallet\'s life, by cohort; Panel B relative to first-day equity: every cohort falls, Q4 and Q5 cross −100%',cur:'6.2',prop:'6.2',img:'lev_life_equity'},
- {id:'fig:lev_life_equity_groups',kind:'fig',zh:'The same curves for market makers and algorithmic takers against the front-end median (−9%, −27% vs −94%)',cur:'6.2',prop:'A',img:'lev_life_equity_mm_algo'},
- {id:'fig:lev_net_deposits',po:8,kind:'fig',zh:'Cumulative net deposits by cohort: Q2 to Q5 deposit, Q1 withdraws (sign under review)',cur:'6.2',prop:'6.2',img:'lev_net_deposits_total'},
- {id:'tab:lev_ledger',po:12,kind:'tab',zh:'Decomposition by leverage cohort: execution cost flat, price impact and liquidation vary',cur:'6.2',prop:'6.3'},
- {id:'tab:exec_cost_means',po:15,kind:'tab',zh:'Half-spread, slippage and execution cost by group: same half-spread, slippage 7.7× higher',cur:'6.3',prop:'6.5'},
- {id:'fig:slippage_size_vs_pdf',kind:'fig',zh:'Slippage rises with order size; front-end volume sits in the large-order tail',cur:'6.3',prop:'A',img:'slippage_by_log_size_all10_min300'},
- {id:'tab:taker_slippage_regression',po:16,kind:'tab',zh:'Fama–MacBeth slippage on size: two thirds of the front-end premium survives size controls',cur:'6.3',prop:'6.5'},
- {id:'tab:trade_size_depth_elasticity',kind:'tab',zh:'Trade size against opposite-side depth: market makers scale down, front-end traders barely do',cur:'6.3',prop:'A'},
- {id:'fig:price_impact_horizon',po:17,kind:'fig',zh:'Price impact by horizon (taker / maker): common at 1 minute, apart by 2 hours',cur:'6.4',prop:'6.6',img:'price_impact_horizon_taker'},
- {id:'tab:dir_role_type_bps',po:18,kind:'tab',zh:'Price impact by group × horizon × purpose: openings are where the groups disagree, loss-realizing closes decay for all',cur:'6.4',prop:'6.6'},
- {id:'tab:res_flow_return_aggregate',kind:'tab',zh:'Group flow on lagged returns: front-end momentum (+6.8), both algorithmic groups contrarian',cur:'6.4',prop:'A'},
- {id:'tab:flow_return_trade_purpose',kind:'tab',zh:'Nine cells: loss-cut flow is momentum for all, gain-realizing flow contrarian for all, openings momentum only for front-end',cur:'6.4',prop:'A'},
- {id:'tab:res_flow_cross_group',kind:'tab',zh:'Cross-group flow regressions: the algorithmic groups trade against the last front-end imbalance',cur:'6.4',prop:'A'},
- {id:'tab:flow_flow_trade_purpose',kind:'tab',zh:'Nine-cell flow-to-flow panels: how each cell responds to lagged loss-cut flow',cur:'6.4',prop:'A'},
- {id:'tab:liq_descriptives',po:20,kind:'tab',zh:'Half-spread, size and crowding by purpose: liquidations 15 bps, $31k, 84% share a millisecond with another taker',cur:'6.5',prop:'6.7'},
- {id:'tab:liq_conditional',po:24,kind:'tab',zh:'Liquidation premium at the same size and minute: only +2 bps',cur:'6.5',prop:'6.7'},
- {id:'tab:liq_timing',po:21,kind:'tab',zh:'Post-trade cumulative price impact, voluntary purposes vs liquidations: liquidations −16 → −28 bps',cur:'6.5',prop:'6.7'},
- {id:'tab:lev_liq',po:23,kind:'tab',zh:'Liquidations by cohort: incidence rises with leverage, losses run the other way, Q1 −604 bps inside episodes',cur:'6.5',prop:'6.7'},
- {id:'tab:fee_rates',po:13,kind:'tab',zh:'Realized fee rates (2.99 vs 0.16 bps) and taker / maker volume shares',cur:'6.6',prop:'6.4'},
- {id:'tab:label_rules_firstpass',kind:'tab',zh:'First-pass classification rules',cur:'A',prop:'A'},
- {id:'tab:label_rules_secondpass',kind:'tab',zh:'Second-pass stay rules',cur:'A',prop:'A'},
- {id:'tab:label_stability',kind:'tab',zh:'Label persistence; wallets and active days by group',cur:'A',prop:'A'},
- {id:'tab:pair_m120_amb',kind:'tab',zh:'P&L matrix including the Ambiguous group',cur:'A',prop:'A'},
- {id:'tab:pnl_split_amb',kind:'tab',zh:'Decomposition including the Ambiguous group',cur:'A',prop:'A'},
- {id:'tab:ambiguous_order_behavior',kind:'tab',zh:'Order behavior of Ambiguous vs front-end wallets',cur:'A',prop:'A'},
- {id:'tab:fee_tier_user_vol_share',kind:'tab',zh:'Users and volume by fee tier and group',cur:'A',prop:'A'},
- {id:'tab:fee_tier_userday',kind:'tab',zh:'Average daily volume by fee tier and group',cur:'A',prop:'A'},
- {id:'fig:tier_pies',kind:'fig',zh:'Fee-tier composition by group',cur:'A',prop:'A',img:'tier_pies_by_group'},
- {id:'tab:depth_elasticity_crowding_controls',kind:'tab',zh:'Depth elasticity with simultaneous-crowd controls: ordering unchanged',cur:'A',prop:'A'},
- {id:'tab:depth_elasticity_relative_size',kind:'tab',zh:'Relative-size regression',cur:'A',prop:'A'},
- {id:'tab:app_liq_frequency',kind:'tab',zh:'Liquidation volume, trades and October-10 share by group (the 97.6% and 79.7% live here)',cur:'A',prop:'A'},
- {id:'tab:app_liq_volume_comparison',kind:'tab',zh:'Notional quantiles by purpose and group',cur:'A',prop:'A'},
- {id:'tab:app_lev_bounds',kind:'tab',zh:'Cohort boundaries by coin',cur:'A',prop:'A'},
- {id:'tab:app_lev_transition',kind:'tab',zh:'Where a pair\'s daily opening volume falls (persistence)',cur:'A',prop:'A'},
- {id:'tab:app_lev_matched',kind:'tab',zh:'Outcomes at matched leverage: front-end wallets liquidated 20× as often as market makers (rebuild on ten coins pending)',cur:'A',prop:'A'},
- {id:'tab:app_lev_purpose',kind:'tab',zh:'Markout and price impact by purpose, horizon and cohort, with the pre-fill move',cur:'A',prop:'A'},
- {id:'fig:app_lev_timing_purpose',kind:'fig',zh:'Price-impact paths by purpose and cohort',cur:'A',prop:'A',img:'lev_timing_purpose_retail'},
- {id:'fig:app_lev_cum_retail',kind:'fig',zh:'Cumulative M120 of the front-end cohorts',cur:'A',prop:'A',img:'lev_cum_m120_retail'},
- {id:'fig:app_lev_cum_mm',kind:'fig',zh:'Cumulative M120 of market-maker cohorts',cur:'A',prop:'A',img:'lev_cum_m120_mm'},
- {id:'fig:app_lev_cum_algo',kind:'fig',zh:'Cumulative M120 of algorithmic-taker cohorts',cur:'A',prop:'A',img:'lev_cum_m120_algo'},
- {id:'fig:lev_cascade_progress',kind:'fig',zh:'When each cohort is liquidated inside a large episode: Q4 and Q5 first, Q1 to Q3 late',cur:'A',prop:'A',img:'lev_cascade_progress'},
- {id:'fig:lev_oct10',po:22,kind:'fig',zh:'The October 10 BTC cascade by cohort (moved into 6.5.1 on Sep 30)',cur:'6.5',prop:'6.7',img:'lev_oct10_cascade'},
- {id:'tab:funding',kind:'tab',zh:'Funding under two measures: 120-minute attribution vs held to period end',cur:'A',prop:'A'},
- {id:'tab:funding_exposure',kind:'tab',zh:'Opening flow, net position and gross exposure: front-end traders are net long',cur:'A',prop:'A'},
- {id:'NEW:lev_regression',po:10,kind:'tab',zh:'New table: wallet-level regression of end equity over first-day equity on leverage cohort, with first-day equity, lifespan and coin controls',cur:'N',prop:'6.2',isNew:true},
- {id:'NEW:flow_merged',po:19,kind:'tab',zh:'New table: one flow regression table, group row plus Open / GRC / LRC rows, numbers from res_flow_return_aggregate and flow_return_trade_purpose',cur:'N',prop:'6.6',isNew:true},
- {id:'NEW:venue_fees_vs_pnl',po:14,kind:'fig',zh:'New figure: cumulative fees collected by the venue against cumulative front-end P&L',cur:'N',prop:'6.4',isNew:true},
- {id:'NEW:mm_algo_net_deposits',kind:'fig',zh:'New figure (drawn, T-075 pending): net deposits of market makers and algorithmic takers against front-end wallets',cur:'N',prop:'X',isNew:true},
+ {"id": "fig:label_decision_flow", "po": 1, "kind": "fig", "zh": "Wallet classification decision flow", "cur": "5", "prop": "5", "img": "classification_decision_flow"},
+ {"id": "tab:label_cross_coin", "po": 2, "kind": "tab", "zh": "Per-coin daily active users, volume shares and totals by group (Xinmeng asks whether it can go to the appendix, 13a)", "cur": "5", "prop": "5"},
+ {"id": "fig:cost_mechanics", "po": 3, "kind": "fig", "zh": "Trade P&L, price impact and execution cost on one midprice path", "cur": "5", "prop": "5", "img": "cost_mechanics"},
+ {"id": "fig:alo_mechanics", "kind": "fig", "zh": "Mechanics of an add-liquidity-only (ALO) order", "cur": "5", "prop": "5", "papp": 1, "why": "Illustrates one order type that the paragraph explains in words (Xinmeng, 13b).", "img": "alo_mechanics"},
+ {"id": "fig:frontend_orderpanel", "kind": "fig", "zh": "The venue's front-end order-entry panel", "cur": "5", "prop": "5", "papp": 1, "why": "Screenshot of the order-entry panel; nothing to read off it (13c).", "img": "frontend_orderpanel"},
+ {"id": "tab:label_rules_firstpass", "kind": "tab", "zh": "First-pass classification rules", "cur": "5", "capp": 1, "prop": "5", "papp": 1, "why": "Rule tables; the flow chart carries the logic in the body."},
+ {"id": "tab:label_rules_secondpass", "kind": "tab", "zh": "Second-pass stay rules", "cur": "5", "capp": 1, "prop": "5", "papp": 1, "why": "Rule tables; the flow chart carries the logic in the body."},
+ {"id": "tab:label_stability", "kind": "tab", "zh": "Label persistence; wallets, active days and volume share on the dominant label", "cur": "5", "capp": 1, "prop": "5", "papp": 1, "why": "Robustness of the labels; one sentence in 5."},
+ {"id": "tab:ambiguous_order_behavior", "kind": "tab", "zh": "Order behavior of Ambiguous vs front-end wallets", "cur": "5", "capp": 1, "prop": "5", "papp": 1, "why": "Describes the excluded group."},
+ {"id": "fig:cumulative_realized_spread", "po": 4, "kind": "fig", "zh": "Cumulative M120 by group (all / taker only): the front-end line falls almost monotonically", "cur": "6.1", "prop": "6.1", "img": "cum_m120_excl1010_all"},
+ {"id": "tab:pair_m120", "po": 5, "kind": "tab", "zh": "Taker-group × maker-group P&L matrix, with pair volumes: retail loses to every group, market makers gain against every group", "cur": "6.1", "prop": "6.1"},
+ {"id": "tab:lev_groups", "po": 6, "kind": "tab", "zh": "Leverage by group: median opening leverage 9.0× retail, 3.7× algo takers, 1.4× market makers; share of each group inside the Q1 range", "cur": "6.2", "prop": "6.2"},
+ {"id": "fig:lev_life_equity", "po": 7, "kind": "fig", "zh": "Equity net of deposits over a wallet's life, by cohort; Panel B relative to first-day equity: every cohort falls, the median Q5 wallet ends at −103% (Panel A of the proposed two-panel figure)", "cur": "6.2", "prop": "6.2", "img": "lev_life_equity"},
+ {"id": "fig:lev_net_deposits", "po": 8, "kind": "fig", "zh": "Cumulative net deposits by cohort: Q3–Q5 deposit (+$180M each), Q1 withdraws (−$299M). Removed from the draft on Oct 4 (now rows in the accounts table); the proposal brings it back as Panel B", "cur": "X", "gone": 1, "prop": "6.2", "img": "lev_net_deposits_total"},
+ {"id": "tab:lev_cohorts", "po": 9, "kind": "tab", "zh": "Front-end cohort profile: volume, opening leverage, trade size, equity, lifespan (trim to equity, trade size over equity, lifespan, liquidation volume)", "cur": "6.2", "prop": "6.2"},
+ {"id": "NEW:lev_regression", "po": 10, "kind": "tab", "zh": "New table: wallet-level regression of end equity over first-day equity on leverage cohort, with first-day equity, lifespan and coin controls", "cur": "N", "prop": "6.2", "isNew": 1},
+ {"id": "tab:lev_accounts", "kind": "tab", "zh": "Accounts by group and cohort: first-, active- and last-day equity, active days, lifespan, trades, size, volume (new Oct 4)", "cur": "6.2", "prop": "6.2", "papp": 1, "why": "Five of its eight blocks repeat the cohort table (13d); the body quotes the medians ($107 of equity, 6 active days)."},
+ {"id": "tab:app_lev_equity", "kind": "tab", "zh": "End-of-life equity net of deposits and net deposits, by cohort and group (new Oct 4; the numbers behind the life-equity figure)", "cur": "6.2", "capp": 1, "prop": "6.2", "papp": 1, "why": "Numbers behind the two-panel figure; the body quotes −103% / −12% and the deposit totals."},
+ {"id": "fig:lev_life_equity_groups", "kind": "fig", "zh": "The same equity curves for market makers and algorithmic takers against the front-end median (−2%, −14% vs −65%)", "cur": "6.2", "capp": 1, "prop": "6.2", "papp": 1, "why": "Its two lines become reference lines in Panel A of the 6.2 figure.", "img": "lev_life_equity_mm_algo"},
+ {"id": "tab:app_lev_bounds", "kind": "tab", "zh": "Cohort boundaries by coin", "cur": "6.2", "capp": 1, "prop": "6.2", "papp": 1, "why": "Construction detail; the body defines the cohorts in three sentences."},
+ {"id": "tab:app_lev_transition", "kind": "tab", "zh": "Where a pair's daily opening volume falls (cohort persistence)", "cur": "6.2", "capp": 1, "prop": "6.2", "papp": 1, "why": "Robustness: cohort membership persists day to day."},
+ {"id": "tab:pnl_split", "po": 11, "kind": "tab", "zh": "Core decomposition by group: price impact, execution cost, maker, liquidation, ADL, funding, fees, net", "cur": "6.1", "prop": "6.3"},
+ {"id": "tab:lev_ledger", "po": 12, "kind": "tab", "zh": "Decomposition by leverage cohort: execution cost flat (2.38 → 2.06 bps), price impact falls (+2.38 → +0.31), liquidation loss largest in Q1 (−736 bps, almost all on October 10)", "cur": "6.2", "prop": "6.3"},
+ {"id": "tab:pnl_split_amb", "kind": "tab", "zh": "Decomposition including the Ambiguous group", "cur": "6.1", "capp": 1, "prop": "6.3", "papp": 1, "why": "Same decomposition with the Ambiguous group added; the totals barely move."},
+ {"id": "tab:funding", "kind": "tab", "zh": "Funding by group: 120-minute attribution vs held to period end (front-end −$4.8M at 120 min)", "cur": "6.1", "capp": 1, "prop": "6.3", "papp": 1, "why": "Funding is one row of the channel table and $4.8M of $1.11B."},
+ {"id": "tab:funding_exposure", "kind": "tab", "zh": "Opening flow, net position and gross exposure: front-end traders are net long", "cur": "6.1", "capp": 1, "prop": "6.3", "papp": 1, "why": "Explains the sign of the funding row; one sentence."},
+ {"id": "tab:fee_rates", "po": 13, "kind": "tab", "zh": "Realized fee rates (2.99 vs 0.16 bps per dollar) and taker / maker volume shares (85% taker for retail, 20% for market makers)", "cur": "6.6", "prop": "6.4"},
+ {"id": "NEW:venue_fees_vs_pnl", "po": 14, "kind": "fig", "zh": "New figure: cumulative fees collected by the venue from retail against cumulative front-end P&L; one line rises as the other falls", "cur": "N", "prop": "6.4", "isNew": 1},
+ {"id": "tab:fee_tier_user_vol_share", "kind": "tab", "zh": "Users and volume by fee tier and group (92.2% of front-end wallets and 73.5% of their volume in the base tier)", "cur": "6.6", "capp": 1, "prop": "6.4", "papp": 1, "why": "Tier composition; the body quotes the base-tier shares."},
+ {"id": "tab:exec_cost_means", "po": 15, "kind": "tab", "zh": "Half-spread, slippage and execution cost by group: same half-spread, slippage 7.7× higher", "cur": "6.3", "prop": "6.5"},
+ {"id": "tab:taker_slippage_regression", "po": 16, "kind": "tab", "zh": "Fama–MacBeth slippage on size: two thirds of the front-end premium survives size controls", "cur": "6.3", "prop": "6.5"},
+ {"id": "fig:slippage_size_vs_pdf", "kind": "fig", "zh": "Slippage rises with order size; front-end volume sits in the large-order tail", "cur": "6.3", "prop": "6.5", "papp": 1, "why": "The regression carries the size result; the figure draws the same point.", "img": "slippage_by_log_size_all10_min300"},
+ {"id": "tab:trade_size_depth_elasticity", "kind": "tab", "zh": "Trade size against opposite-side depth: market makers scale down, front-end traders barely do", "cur": "6.3", "prop": "6.5", "papp": 1, "why": "One sentence in the body: market makers shrink orders when the book is thin, retail barely does (13e)."},
+ {"id": "tab:depth_elasticity_crowding_controls", "kind": "tab", "zh": "Depth elasticity with simultaneous-crowd controls: ordering unchanged", "cur": "6.3", "capp": 1, "prop": "6.5", "papp": 1, "why": "Robustness: crowding does not explain the gap; one sentence."},
+ {"id": "fig:price_impact_horizon", "po": 17, "kind": "fig", "zh": "Price impact by horizon (taker / maker): common at 1 minute, apart by 2 hours", "cur": "6.4", "prop": "6.6", "img": "price_impact_horizon_taker"},
+ {"id": "tab:dir_role_type_bps", "po": 18, "kind": "tab", "zh": "Price impact by group × horizon × purpose: openings are where the groups disagree, loss-realizing closes decay for all (drop the GRC block)", "cur": "6.4", "prop": "6.6"},
+ {"id": "NEW:flow_merged", "po": 19, "kind": "tab", "zh": "New table: one flow regression table, group row plus Open / GRC / LRC rows, numbers from res_flow_return_aggregate and flow_return_trade_purpose", "cur": "N", "prop": "6.6", "isNew": 1},
+ {"id": "tab:cum_role_horizon", "kind": "tab", "zh": "Dollar P&L by horizon and role: the front-end loss widens from −$68M at 5 min to −$213M at 2 h (moved to 6.4 on Oct 4; the user asked on 9/30 to keep it in the body)", "cur": "6.4", "prop": "6.6", "papp": 1, "why": "One sentence in the body; the horizon figure shows the same pattern in bps. Decide: the user wanted this table kept in the text on 9/30."},
+ {"id": "tab:res_flow_return_aggregate", "kind": "tab", "zh": "Group flow on lagged returns: front-end momentum (+6.8), both algorithmic groups contrarian", "cur": "6.4", "prop": "6.6", "papp": 1, "why": "Folded into the new merged flow table (13h)."},
+ {"id": "tab:flow_return_trade_purpose", "kind": "tab", "zh": "Nine cells: loss-cut flow is momentum for all, gain-realizing flow contrarian for all, openings momentum only for front-end", "cur": "6.4", "prop": "6.6", "papp": 1, "why": "Folded into the merged flow table; Xinmeng would keep this one in the body instead (13h–13j)."},
+ {"id": "tab:res_flow_cross_group", "kind": "tab", "zh": "Cross-group flow regressions: the algorithmic groups trade against the last front-end imbalance", "cur": "6.4", "prop": "6.6", "papp": 1, "why": "One sentence: the algorithmic groups take the other side of the last retail imbalance (13i)."},
+ {"id": "tab:flow_flow_trade_purpose", "kind": "tab", "zh": "Nine-cell flow-to-flow panels: how each cell responds to lagged loss-cut flow", "cur": "6.4", "prop": "6.6", "papp": 1, "why": "Nine-cell detail; one sentence (13j)."},
+ {"id": "fig:app_lev_timing_purpose", "kind": "fig", "zh": "Price-impact paths by purpose and cohort (in the 6.4.1 body since Oct 4)", "cur": "6.4", "prop": "6.6", "papp": 1, "why": "The body quotes the Q1 / Q5 two-hour endpoints; moves with the cohort paragraph (3b).", "img": "lev_timing_purpose_retail"},
+ {"id": "tab:app_lev_purpose", "kind": "tab", "zh": "Markout and price impact by purpose, horizon and cohort, with the pre-fill move", "cur": "6.4", "capp": 1, "prop": "6.6", "papp": 1, "why": "Cohort × purpose × horizon detail behind one sentence."},
+ {"id": "tab:liq_descriptives", "po": 20, "kind": "tab", "zh": "Half-spread, size and crowding by purpose: liquidations 15 bps, $31k, 84% share a millisecond with another taker (Xinmeng would omit it, 13k)", "cur": "6.5", "prop": "6.7"},
+ {"id": "tab:liq_timing", "po": 21, "kind": "tab", "zh": "Post-trade price impact, voluntary purposes vs liquidations: liquidations −16 → −28 bps (Xinmeng: appendix, 13m)", "cur": "6.5", "prop": "6.7"},
+ {"id": "fig:lev_oct10", "po": 22, "kind": "fig", "zh": "The October 10 BTC cascade by cohort: high-leverage cohorts cleared first, low-leverage cohorts last at worse prices", "cur": "6.5", "prop": "6.7", "img": "lev_oct10_cascade"},
+ {"id": "tab:lev_liq", "po": 23, "kind": "tab", "zh": "Liquidations by cohort: incidence rises with leverage (0.85% → 8.78% of closing volume), losses run the other way (−762 vs −2 bps inside episodes); time-to-liquidation rows new Oct 4", "cur": "6.5", "prop": "6.7"},
+ {"id": "tab:liq_conditional", "po": 24, "kind": "tab", "zh": "Liquidation premium at the same size and minute: only +2 bps of half-spread (the regression of the section; Xinmeng would omit it, 13l)", "cur": "6.5", "prop": "6.7"},
+ {"id": "fig:lev_cascade_progress", "kind": "fig", "zh": "When each cohort is liquidated inside the 113 largest episodes: Q4 and Q5 first, Q1 to Q3 late (in the 6.5.1 body since Oct 4)", "cur": "6.5", "prop": "6.7", "papp": 1, "why": "The October 10 figure shows the same ordering in one episode; keep the 113-episode curve as the general case behind it.", "img": "lev_cascade_progress"},
+ {"id": "tab:app_liq_frequency", "kind": "tab", "zh": "Liquidation volume, trades and October-10 share by group (the 97.6% and 79.7% live here)", "cur": "6.5", "capp": 1, "prop": "6.7", "papp": 1, "why": "Source of two numbers quoted in one sentence."},
+ {"id": "tab:app_liq_volume_comparison", "kind": "tab", "zh": "Notional quantiles by purpose and group", "cur": "6.5", "capp": 1, "prop": "6.7", "papp": 1, "why": "Size quantiles by purpose; the body quotes the means."},
+ {"id": "tab:app_lev_matched", "kind": "tab", "zh": "Outcomes at matched leverage, five bands, rebuilt on the ten-coin sample (Oct 4): retail is liquidated far more often than market makers at the same leverage", "cur": "6.5", "capp": 1, "prop": "6.7", "papp": 1, "why": "One sentence in 6.7: 'not only leverage'. Promote it if the referee asks."},
+ {"id": "NEW:mm_algo_net_deposits", "kind": "fig", "zh": "New figure (drawn, T-075 pending): net deposits of market makers and algorithmic takers against front-end wallets", "cur": "N", "prop": "X", "isNew": 1},
+ {"id": "tab:pair_m120_amb", "kind": "tab", "zh": "P&L matrix including the Ambiguous group", "cur": "X", "gone": 1, "prop": "X"},
+ {"id": "tab:fee_tier_userday", "kind": "tab", "zh": "Average daily volume by fee tier and group", "cur": "X", "gone": 1, "prop": "X"},
+ {"id": "fig:tier_pies", "kind": "fig", "zh": "Fee-tier composition by group", "cur": "X", "gone": 1, "prop": "X", "img": "tier_pies_by_group"},
+ {"id": "tab:depth_elasticity_relative_size", "kind": "tab", "zh": "Relative-size regression", "cur": "X", "gone": 1, "prop": "X"},
+ {"id": "fig:app_lev_cum_retail", "kind": "fig", "zh": "Cumulative M120 of the front-end cohorts", "cur": "X", "gone": 1, "prop": "X", "img": "lev_cum_m120_retail"},
+ {"id": "fig:app_lev_cum_mm", "kind": "fig", "zh": "Cumulative M120 of market-maker cohorts", "cur": "X", "gone": 1, "prop": "X", "img": "lev_cum_m120_mm"},
+ {"id": "fig:app_lev_cum_algo", "kind": "fig", "zh": "Cumulative M120 of algorithmic-taker cohorts", "cur": "X", "gone": 1, "prop": "X", "img": "lev_cum_m120_algo"}
 ];
 
 const PRESETS = {
  current:{
   columns:[
-   {key:'5',title:'5 Empirical Methodology',claim:'Classification, cost decomposition, trade purpose, leverage (unchanged).'},
-   {key:'6.1',title:'6.1 Dollar Profits and Losses by Group',claim:'Front-end traders finance the venue.'},
-   {key:'6.2',title:'6.2 Leverage: Which Front-End Traders Lose, and Why',claim:'Relative to equity the loss falls hardest on small high-leverage accounts; they keep depositing; they lose on timing, not execution.'},
-   {key:'6.3',title:'6.3 Execution Cost',claim:'2.43 bps against 0.70 for market makers; the half-spread is common, the gap is slippage.'},
-   {key:'6.4',title:'6.4 Post-Trade Price Impact and Flow Dynamics',claim:'Common at 1 minute, apart by 2 hours; front-end flow is momentum, algorithmic flow contrarian.'},
-   {key:'6.5',title:'6.5 Liquidations',claim:'Front-end traders bear 80% of liquidation losses; forced exits are the costliest closes; by cohort, Q1 loses most.'},
-   {key:'6.6',title:'6.6 Fee Tiers',claim:'Front-end traders pay 87% of fees; two margins, role and tier.'},
-   {key:'A',title:'Appendix',claim:'A.1 rules · A.2 Ambiguous · A.3 fee tiers · A.4 crowd controls · A.5 liquidation statistics · A.6 leverage · A.7 funding'},
-   {key:'N',title:'To do / new',claim:'Figures that do not exist yet.'},
+ {"key": "5", "title": "5 Empirical Methodology", "claim": "Classification, cost decomposition, trade purpose, leverage cohorts (unchanged). Appendix A–B hang here."},
+ {"key": "6.1", "title": "6.1 Dollar Profits and Losses by Group", "claim": "Front-end traders finance the venue: −$1.11B; fees the largest share, then liquidations, then voluntary trading. Appendix D (funding) hangs here."},
+ {"key": "6.2", "title": "6.2 Leverage and Front-End Losses (title proposed Oct 4)", "claim": "Retail opens at 9.0× vs 1.4×; relative to equity the loss falls hardest on small high-leverage accounts (median Q5 −103%, Q1 −12%); Q3–Q5 keep depositing; by cohort, price impact falls with leverage and the liquidation loss is largest in Q1. Appendix C hangs here."},
+ {"key": "6.3", "title": "6.3 Execution Cost", "claim": "2.43 bps against 0.70 for market makers; the half-spread is common, the gap is slippage. Appendix E hangs here."},
+ {"key": "6.4", "title": "6.4 Post-Trade Price Impact and Flow Dynamics", "claim": "Common at 1 minute, apart by 2 hours; front-end flow is momentum, algorithmic flow contrarian; 6.4.1 cohort paths; 6.4.2 flow regressions."},
+ {"key": "6.5", "title": "6.5 Liquidations", "claim": "Front-end traders bear 80% of liquidation losses; forced exits are the costliest closes; 6.5.1 by cohort: Q1 loses most, cascade figures in the body. Appendix F hangs here."},
+ {"key": "6.6", "title": "6.6 Fee Tiers", "claim": "Front-end traders pay 87% of fees; 2.99 vs 0.16 bps per dollar; role and tier. Appendix G hangs here."},
+ {"key": "N", "title": "To do / new", "claim": "Figures and tables that do not exist yet."},
+ {"key": "X", "title": "Removed from the draft on Oct 4", "claim": "Appendix cleanup (b3fb387, 76548a6): two figures and five tables dropped or merged; the net-deposit figure became table rows."}
   ],
-  assign:e=>e.cur,
+  assign:e=>({key:e.cur,app:!!e.capp}),
  },
  proposal:{
   columns:[
-   {key:"5",title:"5 Empirical Methodology",claim:"Unchanged. Keep the classification flow chart, Table 1 and the cost-decomposition sketch; the ALO and order-panel screenshots go to the appendix.",notes:""},
-   {key:"6.1",title:"6.1 Who Loses, and to Whom",claim:"After classification, front-end (retail) traders lose $1.11B over 15 months; market makers gain $0.21B; algorithmic takers break even. The venue, not the counterparties, is the main recipient.",notes:"Write: one paragraph on the group totals (net P&L, who gains, who breaks even), one on the cumulative path (retail falls almost monotonically; the loss is on the taker side). Do not decompose here.\nExhibits: cumulative P&L figure first; pair matrix Panel A as the table (Panel B to the appendix).\nHandoff: the group accounting is settled; which retail traders carry it?"},
-   {key:"6.2",title:"6.2 Which Retail Traders Lose: Small Accounts at High Leverage",claim:"Retail runs 11.4\u00d7 against 1.5\u00d7 for market makers. Sorted by leverage within each coin, every cohort's equity falls; the highest-leverage cohorts, the smallest accounts, lose more than their first-day equity and deposit again. Market makers and algorithmic takers withdraw.",notes:"Write: start with 'retail runs high leverage' (tab lev_groups). Define the five per-coin cohorts in three sentences. Then the picture: Panel A equity net of deposits relative to first-day equity by cohort, with MM and algo as reference lines; Panel B cumulative net deposits by cohort. One sentence that MM and algo are net withdrawers. Profile table trimmed to equity, trade size over equity, lifespan, liquidation volume. Close with the regression: end equity over first-day equity on leverage cohort (controls: first-day equity, lifespan, coin).\nExhibits: lev_groups; two-panel figure (merge lev_life_equity Panel B + lev_net_deposits; MM/algo lines from lev_life_equity_groups); lev_cohorts trimmed; NEW regression table.\nHandoff: how is the money lost?"},
-   {key:"6.3",title:"6.3 Three Channels of Loss",claim:"Fees carry 65% of the retail loss, voluntary trading 14% (execution cost $501M against $347M earned back), forced exits 20%. Across leverage cohorts execution cost is flat; timing and liquidation losses rise with leverage.",notes:"Write: one paragraph on the by-group decomposition (name the three channels in the order of the next three sections; call out execution cost inside voluntary trading), one paragraph on the by-cohort decomposition (what moves with leverage and what does not).\nExhibits: pnl_split and lev_ledger, side by side or as Panel A/B of one table.\nHandoff: the channels in turn: fees, voluntary trading, forced exits."},
-   {key:"6.4",title:"6.4 Fees: The Largest Channel, Collected by the Venue",claim:"$725M, 87% of the fees the three groups pay, goes to the venue. Retail pays 2.99 bps per dollar against 0.16 for market makers: it takes liquidity on 85% of its volume and 92% of its wallets sit in the base tier. The schedule favors professionals, the opposite of equity markets where retail flow earns price improvement.",notes:"Write: the number and who receives it; the two margins (role, tier); NEW paragraph: tiers favor professionals, retail pays the highest rate, unlike brokered equity markets where retail pays no commission and receives price improvement (cite the retail-execution literature); move the cross-venue sentence up from the conclusion (base-tier taker fees 4.5 to 6 bps everywhere).\nExhibits: fee_rates; NEW figure: cumulative fees collected by the venue against cumulative retail P&L. Tier tables stay in the appendix with one sentence.\nHandoff: fees are set by the schedule; the next two channels come from how retail trades."},
-   {key:"6.5",title:"6.5 Execution Cost: Large Orders into Thin Books",claim:"Retail pays the same half-spread as the market makers it trades against and 7.7\u00d7 the slippage: its large orders go into thin books, not because it is crowded. Execution cost is flat across leverage cohorts.",notes:"Write: execution cost per dollar 2.43 / 0.70 / 1.70 bps; half-spread common, the gap is slippage; size explains a third (regression); the rest is orders placed without regard to depth, not crowding (one sentence each, tables in the appendix); one sentence: flat across cohorts (pointer to 6.3).\nExhibits: exec_cost_means; taker_slippage_regression.\nHandoff: execution cost is settled at the fill; what happens to the price afterwards?"},
-   {key:"6.6",title:"6.6 Price Impact: Momentum Trades Against Contrarian Algorithms",claim:"Common one minute after the fill, apart by two hours: retail's impact halves while both algorithmic groups' rises, and after retail cuts a loss the price reverses past zero. Retail opens and cuts losses with the recent move; the algorithmic groups take the other side.",notes:"Write: 1 minute vs 2 hours; openings are where the groups disagree, loss cuts decay for everyone and only retail's crosses zero; flow is momentum for retail and contrarian for algorithms; one sentence: the higher the leverage, the sharper the post-fill decay (pointer to 6.3).\nExhibits: price_impact_horizon; dir_role_type_bps without the GRC block; NEW merged flow table. Cross-group and flow-to-flow tables to the appendix.\nHandoff: a loss cut is the trader's exit; the protocol enforces the same exit at the worst time."},
-   {key:"6.7",title:"6.7 Forced Exits: Frequent at High Leverage, Ruinous at Low Leverage",claim:"Liquidation is the costliest way to close (15 bps half-spread, 4 to 6\u00d7 the size, in crowded moments), 97% of it retail outside October 10, and the price keeps moving against the account afterwards. Leverage sets how often: Q5 is liquidated on 7% of its closing volume after a 1.7% move, Q1 on 1.6% after 9.6%. Cascades set how much: Q1 loses the most on liquidations because its liquidations sit late in the largest episodes.",notes:"Write: incidence and timing (October 10 for MMs); what a forced trade looks like; the post-trade path; ADL net. Then by cohort: frequency rises with leverage, loss runs the other way, the October 10 BTC cascade as the example (high-leverage cohorts cleared first, low-leverage last at worse prices). Mechanism paragraph: gambler's ruin at the margin engine: small stake, leverage near the maximum, a small move triggers the exit, exit price close to entry (entry-to-exit row of lev_liq), re-funded after each wipe-out; even Q1 at 3.7\u00d7 runs twice the market makers' leverage. One sentence: at matched leverage retail is still liquidated 20\u00d7 as often (table in the appendix until rebuilt on ten coins).\nExhibits: liq_descriptives; liq_timing; lev_oct10 figure; lev_liq trimmed (incidence, entry-to-exit, inside/outside episodes); liq_conditional as the regression.\nHandoff to the conclusion: a leverage cap binds on Q5's tiny accounts; the large losses sit in cascades; the largest channel is the fee schedule: leverage constraint plus fee constraint."},
-   {key:"A",title:"Appendix",claim:"Everything else, cited with one sentence each: classification rules, Ambiguous group, fee tiers, slippage-size figure, depth elasticity and crowd controls, the other flow tables, liquidation statistics, cohort bounds and transitions, matched leverage, purpose-by-cohort table, cumulative M120 by cohort, cascade progress, funding.",notes:""},
-   {key:"X",title:"Dropped to a sentence",claim:"Exhibits replaced by one sentence in the text.",notes:""},
+ {"key": "5", "title": "5 Empirical Methodology", "claim": "Unchanged: classification, cost decomposition, trade purpose, cohort definition.", "notes": "Keep the flow chart, the per-coin coverage table and the cost sketch. The ALO and order-panel screenshots go to the appendix (Xinmeng agrees: questions 13b, 13c); she also asks whether the coverage table can go (13a)."},
+ {"key": "6.1", "title": "6.1 Who Loses, and to Whom", "claim": "Once traders are classified, one group carries the loss. Retail loses $1.11 billion: $725 million (65%) in fees to the venue, $380 million (35%) to other traders, mostly market makers, who net $0.21 billion; algorithmic takers net nothing.", "notes": "Then: the loss builds almost monotonically through the 15 months, on the taker side; retail loses against every counterparty group, market makers gain against every group. One table + one figure + description, no decomposition yet (Ruizhe, 9/30).\nExhibits: cumulative P&L figure (all trades / taker only); the taker × maker pair table in dollars and bps.\n→ Which retail traders carry this?"},
+ {"key": "6.2", "title": "6.2 Which Retail Traders Lose: Small Accounts at High Leverage", "claim": "The median retail wallet has lost 65% of its first-day equity by its last active day; the median market maker 2%. The loss rises with leverage: the median Q5 wallet loses 103% of what it started with, deposits again, and loses part of that too; Q1 loses 12%.", "notes": "Numbers re-keyed on Oct 4 (pooled ledger): opening leverage 9.0× retail / 3.7× algo takers / 1.4× market makers (outline said 11.4× / 1.5×); Q1 −12%, Q5 −103% (outline: −46% / −115%); net deposits Q1 −$299M, Q2 +$44M, Q3–Q5 +$180M each (outline: 'Q2–Q5 deposit'); 48% of Q5 wallets deposit more than they withdraw vs 35% of Q1.\nThen: retail runs far more leverage, even Q1 (2.6×) runs twice the market makers'; five per-coin cohorts; Q5 = the smallest accounts ($30 median equity vs $243), the biggest bets (19× first-day equity vs 1.1×), the shortest lives (14 days vs 21); half of Q5 wallets lose everything they start with vs 17% of Q1; market makers and algorithmic takers withdraw ($889M, $826M); close with the regression.\nExhibits: leverage by group; one two-panel figure (A: median equity net of deposits over a wallet's life as a share of first-day equity, by cohort, with MM / algo reference lines; B: cumulative net deposits by cohort: that figure was removed from the draft on Oct 4 and has to come back); cohort profile table trimmed; NEW regression table.\nAppendix: accounts table (new Oct 4), equity / deposit table (new Oct 4), MM / algo equity curves, cohort bounds, cohort persistence.\n→ How is the money lost?"},
+ {"key": "6.3", "title": "6.3 Three Channels of Loss", "claim": "Retail pays $1.23 billion to make its trades (fees $725M plus execution cost $501M), more than its entire net loss, and earns back only $347M after the fill. Fees 65%, voluntary trading 14%, forced exits 20%.", "notes": "Then, by cohort: execution cost is flat (2.38 bps in Q1, 2.06 in Q5); price impact falls with leverage (+2.38 → +0.31 bps); the liquidation loss is largest in Q1 ($67M, 736 bps, almost all on October 10) and smallest in Q5 ($7M, 8 bps); liquidation is the largest cost in Q1–Q2, fees in Q3–Q5. Leverage does not change what retail pays to trade; it changes what happens after.\nExhibit: one table, two panels: the decomposition by group and the same rows by cohort.\nAppendix: the Ambiguous-group version; the two funding tables ($4.8M net; retail is net long).\n→ The channels in turn: fees; voluntary trading in two parts (execution cost at the fill, price impact after it); forced exits."},
+ {"key": "6.4", "title": "6.4 Fees: The Largest Channel, Collected by the Venue", "claim": "The venue collects $725 million from retail, 3.4 times what market makers earn in total, and the smallest accounts pay the highest rate: 2.99 bps per dollar against 0.16 for market makers.", "notes": "Then: role: 85% of retail volume takes liquidity (market makers 20%), and the taker pays more at every tier; tier: 92% of retail wallets and 74% of its volume sit in the base tier; market makers earn fractions of a bp per trade, so they stake HYPE and trade volume to reach the rebates, while retail bets on moves of several percent and does not optimize a 4.5 bp fee; the outcome is the opposite of equity markets, where retail flow earns price improvement; base-tier taker fees are 4.5–6 bps on every major venue (cross-venue sentence up from the conclusion). By cohort one sentence: Q5 pays 3.71 bps, Q1 2.87.\nExhibits: realized fee rates by group and side with taker / maker volume shares; NEW figure: cumulative venue fees from retail against retail's cumulative P&L.\nAppendix: tier composition table.\n→ Fees come from the schedule. The next two channels come from how retail trades."},
+ {"key": "6.5", "title": "6.5 Execution Cost: Large Orders into Thin Books", "claim": "Retail pays the same half-spread as the market makers it trades against and 7.7 times the slippage: its large orders go into thin books.", "notes": "Then: 2.43 / 0.70 / 1.70 bps per dollar for retail / market makers / algorithmic takers; the half-spread is common, the whole gap is slippage; order size explains a third of the gap, the rest sits in the largest retail orders; market makers shrink orders when the other side is thin, retail barely does; crowding does not explain it (one sentence each, tables in the appendix); flat across cohorts, 2.4 bps in Q1 and 2.1 in Q5 (pointer to 6.3).\nExhibits: half-spread, slippage and execution cost per dollar by group; slippage regressed on order size, by group.\nAppendix: slippage-by-size figure, depth elasticity, crowd controls.\n→ Execution cost is settled at the fill. What happens to the price afterwards?"},
+ {"key": "6.6", "title": "6.6 Price Impact: Momentum Trades Against Contrarian Algorithms", "claim": "One minute after a trade the three groups look alike (2.4–2.6 bps of price impact); two hours later retail's has halved while both algorithmic groups' has risen, and after retail cuts a loss the price reverses past zero.", "notes": "Then: openings are where the groups disagree (retail's impact decays, the algorithmic groups' rises); loss cuts decay for everyone, only retail's crosses zero; retail flow follows recent returns, algorithmic flow trades against it; the momentum sits in loss cuts for everyone and in openings for retail alone; by cohort the post-fill decay is sharper at high leverage (+2.38 bps at two hours in Q1, +0.31 in Q5; pointer to 6.3).\nExhibits: price impact against horizon, one minute to two hours, taker side; price impact by group × horizon × purpose (drop the GRC block); NEW merged flow table (group row plus Open / GRC / LRC rows).\nAppendix: the four flow regression tables, the horizon dollar table, the cohort × purpose paths and table.\n→ A loss cut is the trader's own exit. The protocol enforces the same exit, at the worst time."},
+ {"key": "6.7", "title": "6.7 Forced Exits: Frequent at High Leverage, Ruinous at Low Leverage", "claim": "The lowest-leverage cohort is liquidated least (0.85% of its closing volume, against 8.78% in Q5) but loses the most to liquidations ($67M, 736 bps, against $7M, 8 bps), because its liquidations come late in the worst cascades. Q5 is liquidated after a 1.9% move, Q1 after 13.6%.", "notes": "Numbers re-keyed on Oct 4: Q1 $67M / 736 bps vs Q5 $7M / 8 bps (outline said $124M / 593 bps vs $14M / 18 bps); moves 1.9% vs 13.6% (outline: 1.7% vs 9.6%); shares 8.78% vs 0.85% (outline: 7% vs 1.6%).\nThen: liquidation is the costliest close (15 bps of half-spread against under 1, 4–6× the size, 84% in crowded milliseconds) and the price keeps moving against the account (−16 bps at 5 min, −28 at two hours); outside October 10, 97.6% of liquidation volume is retail, market-maker liquidations are that one day; at equal size and minute the premium is only 2 bps: the cost is the size and the moment; Q5 positions are 6.6 hours old when liquidated, Q1's 5.6 days; inside the 113 largest episodes Q1 loses 762 bps, Q5 2 bps; gambler's ruin: small stake, leverage near the maximum, exit close to entry, re-funded after each wipe-out; even Q1 at 2.6× runs twice the market makers' leverage; at matched leverage retail is still liquidated far more often (one sentence); ADL returns $118M, net forced exits $226M.\nExhibits: trade-purpose descriptives; post-trade path by purpose; the October 10 BTC cascade figure; liquidations by cohort (trimmed to incidence, time to liquidation, entry-to-exit, inside / outside episodes); the conditional premium regression.\nAppendix: liquidation statistics by group, size quantiles, the 113-episode cascade curve, matched leverage.\n→ Conclusion: a leverage cap binds on Q5's tiny accounts; the big losses are in cascades; the biggest channel is the fee schedule."},
+ {"key": "X", "title": "Dropped or removed", "claim": "Exhibits replaced by a sentence, or removed from the draft on Oct 4.", "notes": ""}
   ],
-  assign:e=>e.prop,
+  assign:e=>({key:e.prop,app:!!e.papp}),
  }
 };
-const STORE='storyboard.wholoses.v10', VSTORE='storyboard.wholoses.versions';
+const SINGLE=new Set(['X','N','A']);
+const STORE='storyboard.wholoses.v11', VSTORE='storyboard.wholoses.versions';
 const exById=Object.fromEntries(EX.map(e=>[e.id,e]));
 
 let state=null, readonly=false, viewState=null;
 function fromPreset(name,story){
   const p=PRESETS[name];
-  const order={}; p.columns.forEach(c=>order[c.key]=[]);
+  const order={}, appx={}; p.columns.forEach(c=>{order[c.key]=[]; appx[c.key]=[];});
   const list=EX.map((e,i)=>[e,i]).sort((a,b)=>(name==='proposal'?((a[0].po||1000+a[1])-(b[0].po||1000+b[1])):(a[1]-b[1]))).map(x=>x[0]);
-  list.forEach(e=>{ let k=p.assign(e); if(!order[k]) k=p.columns[p.columns.length-1].key; order[k].push(e.id); });
-  return {preset:name,story:story==null?STORY_DEFAULT:story,columns:p.columns.map(c=>({key:c.key,title:c.title,claim:c.claim,notes:c.notes||''})),order};
+  list.forEach(e=>{ const a=p.assign(e); let k=a.key; if(!order[k]) k=p.columns[p.columns.length-1].key; ((a.app&&!SINGLE.has(k))?appx:order)[k].push(e.id); });
+  return {preset:name,story:story==null?STORY_DEFAULT:story,columns:p.columns.map(c=>({key:c.key,title:c.title,claim:c.claim,notes:c.notes||''})),order,appx,why:{}};
 }
+function normalize(st){ if(!st.appx) st.appx={}; if(!st.why) st.why={}; st.columns.forEach(c=>{ if(!st.order[c.key]) st.order[c.key]=[]; if(!st.appx[c.key]) st.appx[c.key]=[]; }); return st; }
 function save(){ try{ localStorage.setItem(STORE,JSON.stringify(state)); }catch(e){} }
-function load(){ try{ const s=localStorage.getItem(STORE); if(s){ const st=JSON.parse(s); if(st&&st.columns&&st.order){ if(st.story==null||OLD_STORIES.includes(st.story)) st.story=STORY_DEFAULT; return st; } } }catch(e){} return null; }
+function load(){ try{ const s=localStorage.getItem(STORE); if(s){ const st=JSON.parse(s); if(st&&st.columns&&st.order){ if(st.story==null||OLD_STORIES.includes(st.story)) st.story=STORY_DEFAULT; return normalize(st); } } }catch(e){} return null; }
 function loadVersions(){ try{ const s=localStorage.getItem(VSTORE); if(s){ const v=JSON.parse(s); if(Array.isArray(v)) return v; } }catch(e){} return []; }
 function saveVersions(v){ try{ localStorage.setItem(VSTORE,JSON.stringify(v)); }catch(e){ toast('Could not save: browser storage is full'); } }
-function keyLabel(k){ return k==='A'?'appendix':(k==='X'?'parking':(k==='N'?'to do':'§'+k)); }
-function shortName(k){ return k==='A'?'Appendix':(k==='X'?'Parking':(k==='N'?'To do':k)); }
+function keyLabel(k){ return k==='A'?'appendix':(k==='X'?'dropped':(k==='N'?'to do':'§'+k)); }
+function shortName(k){ return k==='A'?'App.':(k==='X'?'Dropped':(k==='N'?'To do':k)); }
+function whyOf(e,st){ return (st.why&&st.why[e.id]!=null)?st.why[e.id]:(e.why||''); }
 
 const board=document.getElementById('board');
 const storyEl=document.getElementById('story');
@@ -298,18 +312,19 @@ function render(){
   storyEl.contentEditable=readonly?'false':'true';
   board.innerHTML='';
   st.columns.forEach((c,ci)=>{
+    const single=SINGLE.has(c.key);
     const col=document.createElement('section'); col.className='col'+(c.key==='A'?' appendix':'')+(c.notes?' shownotes':''); col.dataset.key=c.key;
     const head=document.createElement('div'); head.className='colhead';
     const row1=document.createElement('div'); row1.className='row';
     const key=document.createElement('span'); key.className='colkey'; key.textContent=keyLabel(c.key);
-    const n=(st.order[c.key]||[]).length;
-    const count=document.createElement('span'); count.className='count'; count.textContent=n+(n===1?' exhibit':' exhibits');
+    const nM=(st.order[c.key]||[]).length, nA=(st.appx[c.key]||[]).length;
+    const count=document.createElement('span'); count.className='count'; count.textContent=single?(nM+(nM===1?' exhibit':' exhibits')):(nM+' in text · '+nA+' in appendix');
     const tools=document.createElement('span'); tools.className='tools';
     const mk=(t,title,fn)=>{const b=document.createElement('button');b.className='ghost';b.textContent=t;b.title=title;b.addEventListener('click',fn);return b;};
     tools.appendChild(mk('‹','Move section left',()=>moveCol(ci,-1)));
     tools.appendChild(mk('›','Move section right',()=>moveCol(ci,1)));
     tools.appendChild(mk('✎','Notes for this section',()=>{col.classList.toggle('shownotes');}));
-    tools.appendChild(mk('✕','Remove this section (its exhibits go to Parking)',()=>delCol(ci)));
+    tools.appendChild(mk('✕','Remove this section (its exhibits go to Dropped)',()=>delCol(ci)));
     row1.append(key,count,tools);
     const title=document.createElement('div'); title.className='title'; title.contentEditable=readonly?'false':'true'; title.dataset.ph='Section title'; title.textContent=c.title;
     title.addEventListener('blur',()=>{ if(readonly) return; c.title=title.textContent.trim();save();});
@@ -320,34 +335,46 @@ function render(){
     const ta=document.createElement('textarea'); ta.placeholder='Notes: how to write it, what stays, what is open'; ta.value=c.notes||''; ta.readOnly=readonly;
     ta.addEventListener('input',()=>{c.notes=ta.value;save();});
     notes.appendChild(ta);
-    const cards=document.createElement('div'); cards.className='cards'; cards.dataset.key=c.key;
-    (st.order[c.key]||[]).forEach(id=>{ const e=exById[id]; if(e) cards.appendChild(renderCard(e,c.key,st)); });
-    if(!readonly) wireDrop(cards,col);
-    col.append(head,notes,cards);
+    const body=document.createElement('div'); body.className='colbody';
+    const mkZone=(tier,label)=>{
+      if(!single){ const z=document.createElement('div'); z.className='zone-lab '+tier; z.textContent=label; body.appendChild(z); }
+      const cards=document.createElement('div'); cards.className='cards '+tier; cards.dataset.key=c.key; cards.dataset.tier=tier;
+      const ids=(tier==='app'?st.appx[c.key]:st.order[c.key])||[];
+      ids.forEach(id=>{ const e=exById[id]; if(e) cards.appendChild(renderCard(e,c.key,tier,st)); });
+      if(!readonly) wireDrop(cards,col,tier);
+      body.appendChild(cards);
+    };
+    mkZone('main',single?'':'In the text');
+    if(!single) mkZone('app',st.preset==='current'?'Appendix (cited from this section)':'Appendix of this section');
+    col.append(head,notes,body);
     board.appendChild(col);
   });
   autoSizeNotes();
 }
-function autoSizeNotes(){ document.querySelectorAll('.notes textarea').forEach(t=>{ t.style.height='auto'; t.style.height=Math.min(t.scrollHeight+4,300)+'px'; }); }
-function renderCard(e,colKey,st){
-  const d=document.createElement('article'); d.className='card'; d.draggable=!readonly; d.dataset.id=e.id;
+function autoSizeNotes(){ document.querySelectorAll('.notes textarea').forEach(t=>{ t.style.height='auto'; t.style.height=Math.min(t.scrollHeight+4,320)+'px'; }); }
+function renderCard(e,colKey,tier,st){
+  const d=document.createElement('article'); d.className='card'+(tier==='app'?' inapp':''); d.draggable=!readonly; d.dataset.id=e.id;
   const zh=document.createElement('div'); zh.className='zh'; zh.textContent=e.zh;
   const meta=document.createElement('div'); meta.className='meta';
   const chip=document.createElement('span'); chip.className='chip '+e.kind; chip.textContent=e.kind==='tab'?'Table':'Figure';
   const lab=document.createElement('span'); lab.className='label'; lab.textContent=e.id;
   meta.append(chip,lab);
   if(e.isNew){ const nn=document.createElement('span'); nn.className='chip new'; nn.textContent='new'; meta.appendChild(nn); }
-  else if(e.cur!==colKey){ const m=document.createElement('span'); m.className='chip moved'; m.textContent='now '+shortName(e.cur); meta.appendChild(m); }
+  else if(e.gone){ if(colKey!=='X'){ const g=document.createElement('span'); g.className='chip gone'; g.textContent='removed Oct 4'; meta.appendChild(g); } }
+  else { const here=(e.cur===colKey)&&((!!e.capp)===(tier==='app')); if(!here){ const m=document.createElement('span'); m.className='chip moved'; m.textContent='now '+shortName(e.cur)+(e.capp?' app.':(SINGLE.has(e.cur)?'':' text')); meta.appendChild(m); } }
   d.append(zh,meta);
   const t=e.kind==='fig'?(e.img&&THUMBS[e.img]):TABS[e.id];
   if(t){ const img=document.createElement('img'); img.className='thumb'+(e.kind==='tab'?' tab':''); img.src=t.s; img.alt=e.id; img.loading='lazy';
     img.addEventListener('click',ev=>{ev.stopPropagation();openLightbox(t.l,e.id);}); d.appendChild(img); }
   else { const ph=document.createElement('div'); ph.className='placeholder'; ph.textContent=e.isNew?'not drawn yet':'no preview'; d.appendChild(ph); }
+  if(tier==='app'&&st.preset!=='current'){ const w=document.createElement('div'); w.className='why'; w.contentEditable=readonly?'false':'true'; w.dataset.ph='Why the appendix?'; w.textContent=whyOf(e,st);
+    w.addEventListener('blur',()=>{ if(readonly) return; state.why[e.id]=w.textContent.trim(); save(); }); d.appendChild(w); }
   const foot=document.createElement('div'); foot.className='foot';
   const sel=document.createElement('select'); sel.title='Move to…';
   const o0=document.createElement('option'); o0.textContent='Move to…'; o0.value=''; sel.appendChild(o0);
-  st.columns.forEach(c=>{ if(c.key!==colKey){ const o=document.createElement('option'); o.value=c.key; o.textContent=c.title.slice(0,32); sel.appendChild(o);} });
-  sel.addEventListener('change',()=>{ if(sel.value){ moveCard(e.id,sel.value,null); } });
+  st.columns.forEach(c=>{ const s=SINGLE.has(c.key); const opts=s?[['main',c.title.slice(0,32)]]:[['main','§'+c.key+' · text'],['app','§'+c.key+' · appendix']];
+    opts.forEach(([tr,label])=>{ if(c.key===colKey&&tr===tier) return; const o=document.createElement('option'); o.value=c.key+'|'+tr; o.textContent=label; sel.appendChild(o); }); });
+  sel.addEventListener('change',()=>{ if(sel.value){ const [k,tr]=sel.value.split('|'); moveCard(e.id,k,tr,null); } });
   foot.appendChild(sel);
   d.appendChild(foot);
   if(!readonly){
@@ -357,33 +384,35 @@ function renderCard(e,colKey,st){
   return d;
 }
 function clearIndicators(){ document.querySelectorAll('.drop-indicator').forEach(n=>n.remove()); document.querySelectorAll('.col.dragover').forEach(n=>n.classList.remove('dragover')); }
-function wireDrop(cards,col){
+function wireDrop(cards,col,tier){
   cards.addEventListener('dragover',ev=>{ ev.preventDefault(); ev.dataTransfer.dropEffect='move';
     clearIndicators(); col.classList.add('dragover');
     const after=cardAfterPointer(cards,ev.clientY); const ind=document.createElement('div'); ind.className='drop-indicator';
     if(after) cards.insertBefore(ind,after); else cards.appendChild(ind); });
   cards.addEventListener('dragleave',ev=>{ if(!col.contains(ev.relatedTarget)) clearIndicators(); });
-  cards.addEventListener('drop',ev=>{ ev.preventDefault(); const id=ev.dataTransfer.getData('text/plain'); const after=cardAfterPointer(cards,ev.clientY); clearIndicators();
-    moveCard(id,cards.dataset.key,after?after.dataset.id:null); });
+  cards.addEventListener('drop',ev=>{ ev.preventDefault(); ev.stopPropagation(); const id=ev.dataTransfer.getData('text/plain'); const after=cardAfterPointer(cards,ev.clientY); clearIndicators();
+    moveCard(id,cards.dataset.key,tier,after?after.dataset.id:null); });
 }
 function cardAfterPointer(cards,y){
   const els=[...cards.querySelectorAll('.card:not(.dragging)')];
   for(const el of els){ const r=el.getBoundingClientRect(); if(y<r.top+r.height/2) return el; }
   return null;
 }
-function moveCard(id,toKey,beforeId){
+function moveCard(id,toKey,tier,beforeId){
   if(readonly) return;
   for(const k in state.order){ const i=state.order[k].indexOf(id); if(i>=0) state.order[k].splice(i,1); }
-  const arr=state.order[toKey]||(state.order[toKey]=[]);
+  for(const k in state.appx){ const i=state.appx[k].indexOf(id); if(i>=0) state.appx[k].splice(i,1); }
+  const target=(tier==='app'&&!SINGLE.has(toKey))?state.appx:state.order;
+  const arr=target[toKey]||(target[toKey]=[]);
   const j=beforeId?arr.indexOf(beforeId):-1;
   if(j>=0) arr.splice(j,0,id); else arr.push(id);
   save(); render();
 }
 function moveCol(i,dir){ if(readonly) return; const j=i+dir; if(j<0||j>=state.columns.length) return; const t=state.columns[i]; state.columns[i]=state.columns[j]; state.columns[j]=t; save(); render(); }
-function delCol(i){ if(readonly) return; const c=state.columns[i]; if(state.columns.length<=2) return; if(!confirm('Remove "'+c.title+'"? Its exhibits move to Parking.')) return;
-  let park=state.columns.find(x=>x.key==='X'); if(!park){ park={key:'X',title:'Parking',claim:'',notes:''}; state.columns.push(park); state.order.X=[]; }
-  state.order.X=(state.order.X||[]).concat(state.order[c.key]||[]); delete state.order[c.key]; state.columns.splice(i,1); save(); render(); }
-function addCol(){ if(readonly) return; let n=1; while(state.columns.some(c=>c.key==='new'+n)) n++; const key='new'+n; state.columns.splice(Math.max(1,state.columns.length-2),0,{key,title:'New section',claim:'',notes:''}); state.order[key]=[]; save(); render(); }
+function delCol(i){ if(readonly) return; const c=state.columns[i]; if(state.columns.length<=2) return; if(!confirm('Remove "'+c.title+'"? Its exhibits move to Dropped.')) return;
+  let park=state.columns.find(x=>x.key==='X'); if(!park){ park={key:'X',title:'Dropped or removed',claim:'',notes:''}; state.columns.push(park); state.order.X=[]; state.appx.X=[]; }
+  state.order.X=(state.order.X||[]).concat(state.order[c.key]||[],state.appx[c.key]||[]); delete state.order[c.key]; delete state.appx[c.key]; state.columns.splice(i,1); save(); render(); }
+function addCol(){ if(readonly) return; let n=1; while(state.columns.some(c=>c.key==='new'+n)) n++; const key='new'+n; state.columns.splice(Math.max(1,state.columns.length-1),0,{key,title:'New section',claim:'',notes:''}); state.order[key]=[]; state.appx[key]=[]; save(); render(); }
 storyEl.addEventListener('blur',()=>{ if(readonly) return; state.story=storyEl.innerText.trim(); save(); });
 
 // versions
@@ -396,21 +425,23 @@ function openVersions(){ const v=loadVersions(); mtitle.textContent='Saved versi
     const nm=document.createElement('span'); nm.className='vname'; nm.textContent=ver.name;
     const meta=document.createElement('span'); meta.className='vmeta'; const nCols=ver.state.columns.length; meta.textContent=fmtTime(ver.ts)+' · '+nCols+' sections';
     const sp=document.createElement('span'); sp.className='spacer';
-    const view=document.createElement('button'); view.textContent='View'; view.addEventListener('click',()=>{ viewState=JSON.parse(JSON.stringify(ver.state)); readonly=true; document.querySelector('.banner span').textContent='Viewing "'+ver.name+'", read-only.'; modal.hidden=true; render(); });
-    const rs=document.createElement('button'); rs.className='primary'; rs.textContent='Restore'; rs.addEventListener('click',()=>{ if(!confirm('Replace the board with "'+ver.name+'"?')) return; state=JSON.parse(JSON.stringify(ver.state)); readonly=false; save(); render(); modal.hidden=true; toast('Restored "'+ver.name+'"'); });
+    const view=document.createElement('button'); view.textContent='View'; view.addEventListener('click',()=>{ viewState=normalize(JSON.parse(JSON.stringify(ver.state))); readonly=true; document.querySelector('.banner span').textContent='Viewing "'+ver.name+'", read-only.'; modal.hidden=true; render(); });
+    const rs=document.createElement('button'); rs.className='primary'; rs.textContent='Restore'; rs.addEventListener('click',()=>{ if(!confirm('Replace the board with "'+ver.name+'"?')) return; state=normalize(JSON.parse(JSON.stringify(ver.state))); readonly=false; save(); render(); modal.hidden=true; toast('Restored "'+ver.name+'"'); });
     const del=document.createElement('button'); del.className='ghost'; del.textContent='Delete'; del.addEventListener('click',()=>{ if(!confirm('Delete "'+ver.name+'"?')) return; v.splice(i,1); saveVersions(v); openVersions(); });
     row.append(nm,meta,sp,view,rs,del); mlist.appendChild(row); });
   modal.hidden=false; }
 
 function toMarkdown(st){
-  const lines=['# Who Loses? Section 6 storyboard','',`Starting layout: ${st.preset==='current'?'current draft':'proposal'}; exported ${new Date().toISOString().slice(0,16).replace('T',' ')} UTC`,'',`Main story: ${st.story||''}`,''];
+  const lines=['# Who Loses? Section 6 storyboard','',`Starting layout: ${st.preset==='current'?'current draft (Overleaf 4a7ec68, Oct 4)':'proposal'}; exported ${new Date().toISOString().slice(0,16).replace('T',' ')} UTC`,'',`Main story: ${st.story||''}`,''];
+  const item=(e,c,tier)=>{ const where=e.isNew?'(new)':(e.gone?'(removed Oct 4)':(((e.cur===c.key)&&((!!e.capp)===(tier==='app')))?'':`(now ${shortName(e.cur)}${e.capp?' appendix':''})`)); return `- [${e.kind==='tab'?'Table':'Figure'}] ${e.id} ${where} ${e.zh}`; };
   st.columns.forEach(c=>{
-    const ids=st.order[c.key]||[];
+    const single=SINGLE.has(c.key); const ids=st.order[c.key]||[], aids=(st.appx[c.key]||[]);
     lines.push(`## ${c.title}`);
     if(c.claim) lines.push(`Claim: ${c.claim}`);
     if(c.notes) lines.push(`Notes: ${c.notes.replace(/\n/g,' ')}`);
-    lines.push(`Exhibits (${ids.length}):`);
-    ids.forEach(id=>{ const e=exById[id]; if(!e) return; const moved=e.isNew?'(new)':(e.cur!==c.key?`(now ${shortName(e.cur)})`:''); lines.push(`- [${e.kind==='tab'?'Table':'Figure'}] ${e.id} ${moved} ${e.zh}`); });
+    lines.push(single?`Exhibits (${ids.length}):`:`In the text (${ids.length}):`);
+    ids.forEach(id=>{ const e=exById[id]; if(e) lines.push(item(e,c,'main')); });
+    if(!single){ lines.push(`Appendix (${aids.length}):`); aids.forEach(id=>{ const e=exById[id]; if(!e) return; const w=whyOf(e,st); lines.push(item(e,c,'app')+(w?` — ${w}`:'')); }); }
     lines.push('');
   });
   return lines.join('\n');
@@ -418,7 +449,7 @@ function toMarkdown(st){
 const modal=document.getElementById('modal'), mtext=document.getElementById('mtext'), mtitle=document.getElementById('mtitle'), mhint=document.getElementById('mhint'), mactions=document.getElementById('mactions'), mlist=document.getElementById('mlist');
 function openExport(){ const st=readonly?viewState:state; mtitle.textContent='Export'; mlist.hidden=true; mtext.hidden=false; mhint.textContent='Markdown for people; the last line is JSON that restores this board through Import.'; mtext.value=toMarkdown(st)+'\n<!-- state -->\n'+JSON.stringify(st); mactions.innerHTML=''; modal.hidden=false; mtext.focus(); mtext.select(); }
 function openImport(){ mtitle.textContent='Import'; mlist.hidden=true; mtext.hidden=false; mhint.textContent='Paste the JSON line from an export.'; mtext.value=''; mactions.innerHTML='';
-  const b=document.createElement('button'); b.className='primary'; b.textContent='Restore'; b.addEventListener('click',()=>{ try{ const txt=mtext.value; const j=txt.slice(txt.indexOf('{')); const st=JSON.parse(j); if(!st.columns||!st.order) throw 0; if(st.story==null) st.story=STORY_DEFAULT; state=st; readonly=false; save(); render(); modal.hidden=true; toast('Restored'); }catch(e){ toast('That is not valid JSON'); } });
+  const b=document.createElement('button'); b.className='primary'; b.textContent='Restore'; b.addEventListener('click',()=>{ try{ const txt=mtext.value; const j=txt.slice(txt.indexOf('{')); const st=JSON.parse(j); if(!st.columns||!st.order) throw 0; if(st.story==null) st.story=STORY_DEFAULT; state=normalize(st); readonly=false; save(); render(); modal.hidden=true; toast('Restored'); }catch(e){ toast('That is not valid JSON'); } });
   mactions.appendChild(b); modal.hidden=false; mtext.focus(); }
 document.getElementById('export').addEventListener('click',openExport);
 document.getElementById('import').addEventListener('click',openImport);
@@ -430,9 +461,11 @@ document.getElementById('copy').addEventListener('click',async()=>{ const txt=mt
 document.getElementById('add-col').addEventListener('click',addCol);
 document.getElementById('p-current').addEventListener('click',()=>switchPreset('current'));
 document.getElementById('p-proposal').addEventListener('click',()=>switchPreset('proposal'));
-document.getElementById('view-current').addEventListener('click',()=>{ viewState=fromPreset('current',state.story); readonly=true; document.querySelector('.banner span').textContent='Viewing the current draft, read-only. Your board is untouched.'; render(); });
+document.getElementById('view-current').addEventListener('click',()=>{ viewState=fromPreset('current',state.story); readonly=true; document.querySelector('.banner span').textContent='Viewing the current draft (Overleaf 4a7ec68, Oct 4), read-only. Your board is untouched.'; render(); });
 document.getElementById('back').addEventListener('click',()=>{ readonly=false; viewState=null; render(); });
-document.getElementById('reset-story').addEventListener('click',()=>{ if(readonly) return; if(!confirm('Replace the story text with the six-point version?')) return; state.story=STORY_DEFAULT; save(); render(); toast('Story reset'); });
+document.getElementById('reset-story').addEventListener('click',()=>{ if(readonly) return; if(!confirm('Replace the story text with the seven-point version?')) return; state.story=STORY_DEFAULT; save(); render(); toast('Story reset'); });
+const tgl=document.getElementById('toggle-app');
+tgl.addEventListener('click',()=>{ const on=document.body.classList.toggle('hideapp'); tgl.textContent=on?'Show appendix zones':'Hide appendix zones'; });
 function switchPreset(name){ if(readonly){ readonly=false; viewState=null; } const label=name==='current'?'current draft':'proposal'; if(!confirm('Rearrange the board as the '+label+'? Unsaved changes on the board are lost (saved versions stay).')) return; state=fromPreset(name,state.story); save(); render(); }
 
 const lb=document.getElementById('lightbox'), lbimg=document.getElementById('lbimg'), lbcap=document.getElementById('lbcap');
